@@ -3,7 +3,7 @@ use crate::assert_slice_eq;
 use byteorder::BigEndian;
 use futures::prelude::*;
 use std::{error::Error, io::Cursor};
-use tokio_byteorder::AsyncReadBytesExt;
+use tokio_futures_byteorder::AsyncReadBytesExt;
 
 pub async fn get_jpeg_size<R: AsyncRead + Unpin>(
   reader: &mut R,

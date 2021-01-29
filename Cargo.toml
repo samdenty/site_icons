@@ -4,8 +4,12 @@ version = "0.1.0"
 authors = ["Sam Denty <sam@samdenty.com>"]
 edition = "2018"
 license = "gpl-3.0"
+homepage = "https://github.com/samdenty/site_icons"
 repository = "https://github.com/samdenty/site_icons"
-description = "Website icon scraper with sizes, ordering, and WASM support"
+documentation = "https://docs.rs/site_icons"
+description = "Website icon scraper that fetches sizes (with WASM support)"
+keywords = ["favicon", "logo", "website", "scraper", "icons", "cli"]
+categories = ["command-line-utilities", "multimedia::images", "wasm"]
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ["-Oz", "--enable-mutable-globals"]
@@ -13,13 +17,13 @@ wasm-opt = ["-Oz", "--enable-mutable-globals"]
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-
 [dependencies]
 clap = "3.0.0-beta.2"
 itertools = "0.10.0"
 serde_with = "1.6.1"
 pin-utils = "0.1.0"
 html5ever = "0.25.1"
+percent-encoding = "2.1.0"
 url = { version = "2.2.0", features = ["serde"] }
 regex = "1"
 log = "0.4.14"
@@ -28,12 +32,13 @@ scraper = "0.12.0"
 tokio-futures-byteorder = { version = "0.2.0", features = ["futures"] }
 byteorder = "1.4.2"
 data-url = "0.1.0"
-mime_4 = "0.4.0-a.0"
+mime = { package = "mime_4", version = "0.4.0-a.0" }
 serde = { version = "1.0", features = ["derive", "rc"] }
 serde_json = "1.0"
-reqwest-wasm = { features = ["json", "cookies", "blocking", "stream"] }
+reqwest = { package = "reqwest-wasm", version = "0.11.0", features = ["json", "cookies", "blocking", "stream"] }
 futures = "0.3.12"
 wee_alloc = { version = "0.4.2", optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { version = "1.1.0", features = ["full"] }
+env_logger = "0.8.2"

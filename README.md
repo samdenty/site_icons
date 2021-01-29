@@ -1,6 +1,30 @@
 # site_icons
 
-An efficient website icon scraper for rust
+[![Crates.io](https://img.shields.io/crates/v/site_icons.svg)](https://crates.io/crates/site_icons)
+[![Documentation](https://docs.rs/site_icons/badge.svg)](https://docs.rs/site_icons/)
+![GitHub Sponsors](https://img.shields.io/github/sponsors/samdenty?style=social)
+
+An efficient website icon scraper for rust or command line usage.
+
+## Features
+
+- Ensures all URLs point to valid images
+- Determines icon size by partially fetching images
+- Supports WASM (and cloudflare workers)
+
+### Command line usage
+
+```bash
+cargo install site_icons
+
+site-icons https://google.com
+# https://github.githubassets.com/favicons/favicon.svg site_favicon svg
+# https://github.githubassets.com/app-icon-512.png app_icon png 512x512
+# https://github.githubassets.com/app-icon-192.png app_icon png 192x192
+# https://github.githubassets.com/apple-touch-icon-180x180.png app_icon png 180x180
+```
+
+### API usage
 
 ```rust
 use site_icons::Icons;
@@ -11,16 +35,12 @@ icons.load_website("https://github.com").await?;
 
 // fetch all icons, ensuring they exist & determining size
 let entries = icons.entries().await;
+
+// entries are sorted from highest to lowest resolution
 for icon in entries {
   println("{:?}", icon)
 }
 ```
-
-## Features
-
-- Validates that all URLs exist and are actually images
-- Determines the size of the icon by partially fetching it
-- Supports WASM (and cloudflare workers)
 
 ### Sources
 

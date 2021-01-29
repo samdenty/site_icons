@@ -1,4 +1,4 @@
-use crate::{selector, Icon, IconInfo, IconKind, CLIENT};
+use crate::{selector, utils::encode_svg, warn_err, Icon, IconInfo, IconKind, CLIENT};
 use future::join_all;
 use futures::StreamExt;
 use futures::{prelude::*, task::noop_waker};
@@ -7,7 +7,7 @@ use html5ever::{
   tendril::{Tendril, TendrilSink},
 };
 use reqwest::{header::*, IntoUrl};
-use scraper::Html;
+use scraper::{ElementRef, Html};
 use serde::Deserialize;
 use std::task::Poll;
 use std::{collections::HashMap, error::Error, pin::Pin, task::Context};
@@ -32,9 +32,7 @@ fn add_icon_entry(
 ) {
   match info {
     Ok(info) => entries.push(Icon { url, kind, info }),
-    Err(e) => {
-      warn!("failed to parse icon: {}", e);
-    }
+    Err(_) => warn_err!(info, "failed to parse icon"),
   }
 }
 
@@ -47,12 +45,7 @@ impl Icons {
   }
 
   /// Add an icon URL and start fetching it
-  pub fn add_icon(
-    &mut self,
-    url: Url,
-    kind: IconKind,
-    sizes: Option<String>,
-  ) -> Result<(), Box<dyn Error>> {
+  pub fn add_icon(&mut self, url: Url, kind: IconKind, sizes: Option<String>) {
     // check to see if it already exists
     let mut entries = self.entries.iter_mut();
     if let Some(existing_kind) = self
@@ -65,7 +58,7 @@ impl Icons {
       if &kind > existing_kind {
         *existing_kind = kind;
       }
-      return Ok(());
+      return;
     }
 
     let mut info = Box::pin(IconInfo::get(url.clone(), sizes));
@@ -79,8 +72,6 @@ impl Icons {
         self.pending_entries.insert(url, (kind, info));
       }
     };
-
-    Ok(())
   }
 
   pub async fn load_website<U: IntoUrl>(&mut self, url: U) -> Result<(), Box<dyn Error>> {
@@ -90,65 +81,131 @@ impl Icons {
 
     let mut parser = driver::parse_document(Html::new_document(), Default::default());
     while let Some(data) = body.next().await {
-      let tendril = Tendril::try_from_byte_slice(&data?).map_err(|_| "failed to parse html")?;
-      parser.process(tendril);
+      if let Ok(data) = Tendril::try_from_byte_slice(&data?) {
+        parser.process(data)
+      }
     }
     let document = parser.finish();
 
     {
       let mut found_favicon = false;
 
-      for element_ref in document.select(selector!(
+      for elem_ref in document.select(selector!(
         "link[rel='icon']",
         "link[rel='shortcut icon']",
         "link[rel='apple-touch-icon']",
         "link[rel='apple-touch-icon-precomposed']"
       )) {
-        let elem = element_ref.value();
+        let elem = elem_ref.value();
         if let Some(href) = elem.attr("href").and_then(|href| url.join(&href).ok()) {
-          if self
-            .add_icon(
-              href,
-              IconKind::SiteFavicon,
-              elem.attr("sizes").map(|sizes| sizes.into()),
-            )
-            .is_ok()
-          {
-            found_favicon = true;
-          };
+          self.add_icon(
+            href,
+            IconKind::SiteFavicon,
+            elem.attr("sizes").map(|sizes| sizes.into()),
+          );
+
+          found_favicon = true;
         };
       }
 
       // Check for default favicon.ico
       if !found_favicon {
-        self.add_icon(url.join("/favicon.ico")?, IconKind::SiteFavicon, None)?;
+        self.add_icon(
+          url.join("/favicon.ico").unwrap(),
+          IconKind::SiteFavicon,
+          None,
+        );
       }
     }
 
-    for element_ref in document.select(selector!(
-      "header img",
-      "img[src*=logo]",
-      "img[alt*=logo]",
-      "img[class*=logo]"
-    )) {
-      if let Some(href) = element_ref
-        .value()
-        .attr("src")
-        .and_then(|href| url.join(&href).ok())
-      {
-        if self.add_icon(href, IconKind::SiteLogo, None).is_ok() {
+    {
+      let mut logos: Vec<_> = document
+        .select(selector!(
+          "header img, header svg",
+          "img[src*=logo]",
+          "img[alt*=logo], svg[alt*=logo]",
+          "img[class*=logo], svg[class*=logo]",
+        ))
+        .map(|elem_ref| {
+          let elem = elem_ref.value();
+          let mut weight = 0;
+
+          // if in the header
+          if elem_ref
+            .ancestors()
+            .map(ElementRef::wrap)
+            .flatten()
+            .any(|element| element.value().name() == "header")
+          {
+            weight += 2;
+          }
+
+          let mentions_logo = |attr_name| {
+            elem
+              .attr(attr_name)
+              .map(|attr| attr.to_lowercase().contains("logo"))
+              .unwrap_or(false)
+          };
+          if mentions_logo("class") || mentions_logo("id") {
+            weight += 3;
+          }
+          if mentions_logo("alt") {
+            weight += 2;
+          }
+          if mentions_logo("src") {
+            weight += 1;
+          }
+
+          (elem_ref, weight)
+        })
+        .collect();
+
+      logos.sort_by(|(_, a_weight), (_, b_weight)| b_weight.cmp(a_weight));
+
+      // prefer <img> over svg
+      let mut prev_weight = None;
+      for (i, (logo, weight)) in logos.iter().enumerate() {
+        if let Some(prev_weight) = prev_weight {
+          if weight != prev_weight {
+            break;
+          }
+        }
+        prev_weight = Some(weight);
+
+        if logo.value().name() == "img" {
+          let (logo, weight) = logos.remove(i);
+          logos.insert(0, (logo, weight + 1));
+          break;
+        }
+      }
+
+      for (elem_ref, _) in logos {
+        let elem = elem_ref.value();
+
+        if elem.name() == "svg" {
+          let data_uri = Url::parse(&encode_svg(&elem_ref.html())).unwrap();
+          self.add_icon(data_uri, IconKind::SiteLogo, None);
+          break;
+        }
+
+        if let Some(href) = elem_ref
+          .value()
+          .attr("src")
+          .and_then(|href| url.join(&href).ok())
+        {
+          self.add_icon(href, IconKind::SiteLogo, None);
           break;
         };
-      };
+      }
     }
 
-    for element_ref in document.select(selector!("link[rel='manifest']")) {
-      if let Some(href) = element_ref
+    for elem_ref in document.select(selector!("link[rel='manifest']")) {
+      if let Some(href) = elem_ref
         .value()
         .attr("href")
         .and_then(|href| url.join(&href).ok())
       {
-        self.load_manifest(href).await?;
+        warn_err!(self.load_manifest(href).await, "failed to fetch manifest");
       }
     }
 
@@ -185,9 +242,7 @@ impl Icons {
     Ok(())
   }
 
-  /// Fetch all the icons and return a list of them.
-  ///
-  /// List is ordered from highest resolution to lowest resolution
+  /// Fetch all the icons. Ordered from highest to lowest resolution
   ///
   /// ```
   /// # async fn run() {

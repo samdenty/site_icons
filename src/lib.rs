@@ -9,6 +9,7 @@ mod icon_info;
 mod icon_size;
 mod icons;
 mod macros;
+mod utils;
 
 pub use icon::*;
 pub use icon_info::*;
