@@ -2,7 +2,7 @@
 
 An efficient website icon scraper for rust
 
-```rs
+```rust
 use site_icons::Icons;
 
 let icons = Icons::new();
