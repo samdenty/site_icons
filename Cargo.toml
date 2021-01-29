@@ -8,7 +8,7 @@ homepage = "https://github.com/samdenty/site_icons"
 repository = "https://github.com/samdenty/site_icons"
 documentation = "https://docs.rs/site_icons"
 description = "Website icon scraper that fetches sizes (with WASM support)"
-keywords = ["favicon", "logo", "website", "scraper", "icons", "cli"]
+keywords = ["favicon", "logo", "website", "scraper", "cli"]
 categories = ["command-line-utilities", "multimedia::images", "wasm"]
 
 [package.metadata.wasm-pack.profile.release]
