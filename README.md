@@ -8,8 +8,9 @@ An efficient website icon scraper for rust or command line usage.
 
 ## Features
 
-- Ensures all URLs point to valid images
-- Determines icon size by **partially fetching images**
+- Super fast!
+- Gives you the size for each image (partially downloads them)
+- Can extract a site logo `<img>` using a weighing system
 - Supports WASM (and cloudflare workers)
 
 ### Command line usage
