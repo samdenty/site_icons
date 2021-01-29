@@ -1,0 +1,4 @@
+[tasks.run]
+env = { "RUST_LOG" = "site_icons" }
+command = "cargo"
+args = ["run", "--", "${@}"]

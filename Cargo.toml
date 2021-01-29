@@ -1,0 +1,36 @@
+[package]
+name = "site_icons"
+version = "0.1.0"
+authors = ["Sam Denty <sam@samdenty.com>"]
+edition = "2018"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz", "--enable-mutable-globals"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+
+[dependencies]
+clap = "3.0.0-beta.2"
+itertools = "0.10.0"
+serde_with = "1.6.1"
+pin-utils = "0.1.0"
+html5ever = "0.25.1"
+url = { version = "2.2.0", features = ["serde"] }
+regex = "1"
+log = "0.4.14"
+once_cell = "1.5.2"
+scraper = "0.12.0"
+tokio-byteorder = { git = "https://github.com/samdenty/tokio-byteorder", features = ["futures"] }
+byteorder = "1.4.2"
+data-url = "0.1.0"
+mime = { git = "https://github.com/hyperium/mime" }
+serde = { version = "1.0", features = ["derive", "rc"] }
+serde_json = "1.0"
+reqwest = { git = "https://github.com/samdenty/reqwest", features = ["json", "cookies", "blocking", "stream"] }
+futures = "0.3.8"
+wee_alloc = { version = "0.4.2", optional = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { version = "1.1.0", features = ["full"] }
