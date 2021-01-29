@@ -26,7 +26,7 @@ site-icons https://google.com
 # https://github.githubassets.com/apple-touch-icon-180x180.png app_icon png 180x180
 ```
 
-### API usage
+### Rust usage
 
 ```rust
 use site_icons::Icons;
