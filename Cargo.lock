@@ -769,18 +769,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a60c7ce501c71e03a9c9c0d35b861413ae925bd979cc7a4e30d060069aaac8d"
 
 [[package]]
-name = "mime"
-version = "0.4.0-a.0"
-source = "git+https://github.com/hyperium/mime#938484de95445a2af931515d2b7252612c575da7"
-dependencies = [
- "mime-parse",
- "quoted-string",
-]
+name = "mime-parse-4"
+version = "0.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c6529c7e080378ede23c38da0898fa2760183703f089502b3435aa24d7d8f48"
 
 [[package]]
-name = "mime-parse"
-version = "0.0.0"
-source = "git+https://github.com/hyperium/mime#938484de95445a2af931515d2b7252612c575da7"
+name = "mime_4"
+version = "0.4.0-a.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "12e445295d66528bac7490cdb1d5329c4a203a5ce26263c8db49a9df04d4c1ca"
+dependencies = [
+ "mime-parse-4",
+ "quoted-string",
+]
 
 [[package]]
 name = "mio"
@@ -1276,9 +1278,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "reqwest"
+name = "reqwest-wasm"
 version = "0.11.0"
-source = "git+https://github.com/samdenty/reqwest#fa1d8143d206fff3439b1ef481b6879357b0c29e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f95c6f51c387d62928baa7c144f1e58a318ee8297c632ae224a9ba4ff9b39e12"
 dependencies = [
  "base64",
  "bytes 1.0.1",
@@ -1296,7 +1299,7 @@ dependencies = [
  "js-sys",
  "lazy_static",
  "log",
- "mime 0.3.16",
+ "mime",
  "native-tls",
  "percent-encoding",
  "pin-project-lite 0.2.4",
@@ -1526,17 +1529,17 @@ dependencies = [
  "html5ever",
  "itertools",
  "log",
- "mime 0.4.0-a.0",
+ "mime_4",
  "once_cell",
  "pin-utils",
  "regex",
- "reqwest",
+ "reqwest-wasm",
  "scraper",
  "serde",
  "serde_json",
  "serde_with",
  "tokio 1.1.0",
- "tokio-byteorder",
+ "tokio-futures-byteorder",
  "url",
  "wee_alloc",
 ]
@@ -1819,9 +1822,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "tokio-byteorder"
+name = "tokio-futures-byteorder"
 version = "0.2.0"
-source = "git+https://github.com/samdenty/tokio-byteorder#bed45e14aa3ef3d9c76f70d8c0edf10a7c98abd6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1756daf249ff9da425f11affc6e1c61e79c068cfa87b3bb946a12f8cf81683b3"
 dependencies = [
  "byteorder",
  "futures-io",
