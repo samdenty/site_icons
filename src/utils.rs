@@ -28,6 +28,9 @@ pub fn encode_svg(svg: &str) -> String {
     svg.into()
   };
 
+  // use single quotes instead of double to avoid encoding.
+  let encoded = regex!("\"").replace_all(&encoded, "'");
+
   // remove whitespace
   let encoded = regex!(r">\s{1,}</g").replace_all(&encoded, "><");
   let encoded = regex!(r"\s{2,}").replace_all(&encoded, " ");
