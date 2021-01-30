@@ -1,4 +1,4 @@
-use crate::{selector, utils::encode_svg, warn_err, Icon, IconInfo, IconKind, CLIENT};
+use crate::{utils::encode_svg, Icon, IconInfo, IconKind, CLIENT};
 use future::join_all;
 use futures::StreamExt;
 use futures::{prelude::*, task::noop_waker};

@@ -1,4 +1,3 @@
-use crate::regex;
 use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
 
 const DATA_URI: &AsciiSet = &CONTROLS

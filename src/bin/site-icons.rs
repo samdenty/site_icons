@@ -21,7 +21,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
   if opts.debug {
     let mut builder = Builder::new();
-    builder.filter_module("site_icons", LevelFilter::Info);
+    builder.filter_module("info", LevelFilter::Info);
     builder.init();
   }
 

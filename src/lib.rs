@@ -1,14 +1,35 @@
 #![feature(async_closure, map_into_keys_values, bool_to_option)]
+//! # site_icons
+//! An efficient website icon scraper.
+//!
+//! ## Usage
+//! ```rust
+//! use site_icons::Icons;
+//!
+//! let icons = Icons::new();
+//! // scrape the icons from a url
+//! icons.load_website("https://github.com").await?;
+//!
+//! // fetch all icons, ensuring they exist & determining size
+//! let entries = icons.entries().await;
+//!
+//! // entries are sorted from highest to lowest resolution
+//! for icon in entries {
+//!   println("{:?}", icon)
+//! }
+//! ```
+
 #[macro_use]
 extern crate serde_with;
 #[macro_use]
 extern crate log;
 
+#[macro_use]
+mod macros;
 mod icon;
 mod icon_info;
 mod icon_size;
 mod icons;
-mod macros;
 mod utils;
 
 pub use icon::*;
