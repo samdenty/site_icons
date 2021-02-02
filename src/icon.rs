@@ -7,7 +7,7 @@ use std::{
 };
 use url::Url;
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialOrd, PartialEq, Ord, Eq)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Ord, Eq)]
 pub enum IconKind {
   SiteLogo,
   SiteFavicon,
