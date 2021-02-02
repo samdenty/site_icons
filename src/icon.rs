@@ -3,10 +3,11 @@ use serde::Serialize;
 use std::{
   cmp::Ordering,
   fmt::{self, Display},
+  str::FromStr,
 };
 use url::Url;
 
-#[derive(Debug, Serialize, Clone, PartialOrd, PartialEq, Ord, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialOrd, PartialEq, Ord, Eq)]
 pub enum IconKind {
   SiteLogo,
   SiteFavicon,
@@ -23,7 +24,20 @@ impl Display for IconKind {
   }
 }
 
-#[derive(Debug, Serialize, PartialEq, Eq)]
+impl FromStr for IconKind {
+  type Err = String;
+
+  fn from_str(kind: &str) -> Result<Self, Self::Err> {
+    match kind {
+      "site_logo" => Ok(IconKind::SiteLogo),
+      "app_icon" => Ok(IconKind::AppIcon),
+      "site_favicon" => Ok(IconKind::SiteFavicon),
+      _ => Err("unknown icon kind!".into()),
+    }
+  }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Icon {
   pub url: Url,
   #[serde(with = "serde_with::rust::display_fromstr")]
