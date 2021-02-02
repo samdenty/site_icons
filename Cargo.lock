@@ -518,7 +518,7 @@ dependencies = [
  "http",
  "indexmap",
  "slab",
- "tokio 1.1.0",
+ "tokio 1.1.1",
  "tokio-util",
  "tracing",
  "tracing-futures",
@@ -619,7 +619,7 @@ dependencies = [
  "itoa",
  "pin-project 1.0.4",
  "socket2",
- "tokio 1.1.0",
+ "tokio 1.1.1",
  "tower-service",
  "tracing",
  "want",
@@ -634,7 +634,7 @@ dependencies = [
  "bytes 1.0.1",
  "hyper",
  "native-tls",
- "tokio 1.1.0",
+ "tokio 1.1.1",
  "tokio-native-tls",
 ]
 
@@ -1314,7 +1314,7 @@ dependencies = [
  "serde_json",
  "serde_urlencoded",
  "time",
- "tokio 1.1.0",
+ "tokio 1.1.1",
  "tokio-native-tls",
  "url",
  "wasm-bindgen",
@@ -1474,9 +1474,9 @@ dependencies = [
 
 [[package]]
 name = "serde_with"
-version = "1.6.1"
+version = "1.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "012c1e1750318ba7d775e4104e34a4eca896b0016e6b90370f12381a28fb29f0"
+checksum = "42fa8fb0da0bf5aa7dd5d8fe1f9ec769833eb7cf97ff89942903809e600de908"
 dependencies = [
  "serde",
  "serde_with_macros",
@@ -1527,7 +1527,7 @@ checksum = "fa8f3741c7372e75519bd9346068370c9cdaabcc1f9599cbcf2a2719352286b7"
 
 [[package]]
 name = "site_icons"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "byteorder",
  "clap",
@@ -1546,7 +1546,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "tokio 1.1.0",
+ "tokio 1.1.1",
  "tokio-futures-byteorder",
  "url",
 ]
@@ -1810,9 +1810,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8efab2086f17abcddb8f756117665c958feee6b2e39974c2f1600592ab3a4195"
+checksum = "6714d663090b6b0acb0fa85841c6d66233d150cdb2602c8f9b8abb03370beb3f"
 dependencies = [
  "autocfg",
  "bytes 1.0.1",
@@ -1857,7 +1857,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7d995660bd2b7f8c1568414c1126076c13fbb725c40112dc0120b78eb9b717b"
 dependencies = [
  "native-tls",
- "tokio 1.1.0",
+ "tokio 1.1.1",
 ]
 
 [[package]]
@@ -1868,7 +1868,7 @@ checksum = "76066865172052eb8796c686f0b441a93df8b08d40a950b062ffb9a426f00edd"
 dependencies = [
  "futures-core",
  "pin-project-lite 0.2.4",
- "tokio 1.1.0",
+ "tokio 1.1.1",
 ]
 
 [[package]]
@@ -1883,7 +1883,7 @@ dependencies = [
  "futures-sink",
  "log",
  "pin-project-lite 0.2.4",
- "tokio 1.1.0",
+ "tokio 1.1.1",
  "tokio-stream",
 ]
 
