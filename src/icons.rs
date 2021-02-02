@@ -143,7 +143,7 @@ impl Icons {
           let mentions_logo = |attr_name| {
             elem
               .attr(attr_name)
-              .map(|attr| regex!("logo(?!s)").is_match(&attr.to_lowercase()))
+              .map(|attr| regex!("logo([^s]|$)").is_match(&attr.to_lowercase()))
               .unwrap_or(false)
           };
           if mentions_logo("class") || mentions_logo("id") {
