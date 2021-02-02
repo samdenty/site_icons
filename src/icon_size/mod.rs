@@ -19,8 +19,8 @@ use std::{
 #[serde_as]
 #[derive(Debug, PartialEq, Eq)]
 pub struct IconSize {
-  width: u32,
-  height: u32,
+  pub width: u32,
+  pub height: u32,
 }
 
 impl Display for IconSize {
@@ -91,13 +91,4 @@ fn slice_eq<T: Read + Seek + Unpin>(
   let mut buffer = vec![0; slice.len()];
   cur.read_exact(&mut buffer)?;
   Ok(buffer == slice)
-}
-
-#[macro_export]
-macro_rules! assert_slice_eq {
-  ($cur:expr, $offset:expr, $slice:expr, $($arg:tt)+) => {{
-    if !super::slice_eq($cur, $offset, $slice)? {
-      return Err(format!($($arg)+).into());
-    }
-  }};
 }

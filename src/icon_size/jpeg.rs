@@ -1,5 +1,4 @@
 use super::IconSize;
-use crate::assert_slice_eq;
 use byteorder::BigEndian;
 use futures::prelude::*;
 use std::{error::Error, io::Cursor};

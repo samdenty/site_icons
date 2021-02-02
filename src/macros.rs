@@ -25,3 +25,11 @@ macro_rules! warn_err {
     }
   }};
 }
+
+macro_rules! assert_slice_eq {
+  ($cur:expr, $offset:expr, $slice:expr, $($arg:tt)+) => {{
+    if !super::slice_eq($cur, $offset, $slice)? {
+      return Err(format!($($arg)+).into());
+    }
+  }};
+}

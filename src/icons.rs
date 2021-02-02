@@ -61,7 +61,7 @@ impl Icons {
       return;
     }
 
-    let mut info = Box::pin(IconInfo::get(url.clone(), sizes));
+    let mut info = Box::pin(IconInfo::load(url.clone(), sizes));
 
     // Start fetching the icon
     let noop_waker = noop_waker();
@@ -143,7 +143,7 @@ impl Icons {
           let mentions_logo = |attr_name| {
             elem
               .attr(attr_name)
-              .map(|attr| attr.to_lowercase().contains("logo"))
+              .map(|attr| regex!("logo(?!s)").is_match(&attr.to_lowercase()))
               .unwrap_or(false)
           };
           if mentions_logo("class") || mentions_logo("id") {

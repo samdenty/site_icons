@@ -19,7 +19,7 @@ An efficient website icon scraper for rust or command line usage.
 ```bash
 cargo install site_icons
 
-site-icons https://google.com
+site-icons https://github.com
 # https://github.githubassets.com/favicons/favicon.svg site_favicon svg
 # https://github.githubassets.com/app-icon-512.png app_icon png 512x512
 # https://github.githubassets.com/app-icon-192.png app_icon png 192x192

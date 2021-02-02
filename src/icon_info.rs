@@ -29,42 +29,8 @@ pub enum IconInfo {
   SVG,
 }
 
-impl Display for IconInfo {
-  fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-    match self {
-      IconInfo::PNG { size } => write!(f, "png {}", size),
-      IconInfo::JPEG { size } => write!(f, "jpeg {}", size),
-      IconInfo::ICO { sizes } => write!(f, "ico {}", sizes),
-      IconInfo::SVG => write!(f, "svg"),
-    }
-  }
-}
-
-impl Ord for IconInfo {
-  fn cmp(&self, other: &Self) -> Ordering {
-    let this_size = self.size();
-    let other_size = other.size();
-
-    if this_size.is_none() && other_size.is_none() {
-      Ordering::Equal
-    } else if let (Some(this_size), Some(other_size)) = (this_size, other_size) {
-      this_size.cmp(other_size)
-    } else if this_size.is_none() {
-      Ordering::Less
-    } else {
-      Ordering::Greater
-    }
-  }
-}
-
-impl PartialOrd for IconInfo {
-  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(other))
-  }
-}
-
 impl IconInfo {
-  pub async fn get(url: Url, sizes: Option<String>) -> Result<IconInfo, Box<dyn Error>> {
+  pub async fn load(url: Url, sizes: Option<String>) -> Result<IconInfo, Box<dyn Error>> {
     let sizes = sizes.as_ref().and_then(|s| IconSizes::from_str(s).ok());
 
     let (mime, mut body): (_, Box<dyn AsyncRead + Unpin>) = match url.scheme() {
@@ -158,5 +124,39 @@ impl IconInfo {
       IconInfo::PNG { size } | IconInfo::JPEG { size } => Some(size),
       IconInfo::SVG => None,
     }
+  }
+}
+
+impl Display for IconInfo {
+  fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+    match self {
+      IconInfo::PNG { size } => write!(f, "png {}", size),
+      IconInfo::JPEG { size } => write!(f, "jpeg {}", size),
+      IconInfo::ICO { sizes } => write!(f, "ico {}", sizes),
+      IconInfo::SVG => write!(f, "svg"),
+    }
+  }
+}
+
+impl Ord for IconInfo {
+  fn cmp(&self, other: &Self) -> Ordering {
+    let this_size = self.size();
+    let other_size = other.size();
+
+    if this_size.is_none() && other_size.is_none() {
+      Ordering::Equal
+    } else if let (Some(this_size), Some(other_size)) = (this_size, other_size) {
+      this_size.cmp(other_size)
+    } else if this_size.is_none() {
+      Ordering::Less
+    } else {
+      Ordering::Greater
+    }
+  }
+}
+
+impl PartialOrd for IconInfo {
+  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    Some(self.cmp(other))
   }
 }
