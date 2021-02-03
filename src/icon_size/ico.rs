@@ -1,7 +1,8 @@
-use super::{png::get_png_sizes, IconSizes};
+use super::{png::get_png_sizes, IconSize, IconSizes};
 use byteorder::{LittleEndian, ReadBytesExt};
 use futures::prelude::*;
 use std::{
+  convert::TryInto,
   error::Error,
   io::{Cursor, Seek, SeekFrom},
 };
@@ -32,7 +33,7 @@ pub async fn get_ico_sizes<R: AsyncRead + Unpin>(
   offset += data.len();
   let mut data = Cursor::new(data);
 
-  let mut sizes = IconSizes::new();
+  let mut sizes = Vec::new();
   for i in 0..icon_count {
     data.seek(SeekFrom::Start((INDEX_SIZE * i) as _))?;
 
@@ -52,11 +53,9 @@ pub async fn get_ico_sizes<R: AsyncRead + Unpin>(
         sizes.push(size);
       }
     } else {
-      sizes.add_size(width as _, height as _)
+      sizes.push(IconSize::new(width as _, height as _))
     }
   }
 
-  sizes.sort();
-
-  Ok(sizes)
+  Ok(sizes.try_into()?)
 }

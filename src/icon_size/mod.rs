@@ -10,14 +10,14 @@ pub use png::*;
 
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::{
-  cmp::Ordering,
+  cmp::{self, Ordering},
   error::Error,
   fmt::{self, Display},
   io::{Read, Seek, SeekFrom},
 };
 
 #[serde_as]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct IconSize {
   pub width: u32,
   pub height: u32,
@@ -33,13 +33,15 @@ impl IconSize {
   pub fn new(width: u32, height: u32) -> Self {
     Self { width, height }
   }
+
+  pub fn max_size(&self) -> u32 {
+    cmp::max(self.width, self.height)
+  }
 }
 
 impl Ord for IconSize {
   fn cmp(&self, other: &Self) -> Ordering {
-    let self_res = self.width * self.height;
-    let other_res = other.width * other.height;
-    other_res.cmp(&self_res)
+    other.max_size().cmp(&self.max_size())
   }
 }
 

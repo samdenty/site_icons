@@ -19,7 +19,7 @@ enum IconType {
   ICO,
 }
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(tag = "type")]
 #[serde(rename_all = "lowercase")]
 pub enum IconInfo {
@@ -76,15 +76,19 @@ impl IconInfo {
 
     let kind = match (mime.type_(), mime.subtype()) {
       (mime::IMAGE, mime::PNG) => {
-        if let Some(size) = sizes.map(|s| s.into_largest()) {
-          return Ok(IconInfo::PNG { size });
+        if let Some(sizes) = sizes {
+          return Ok(IconInfo::PNG {
+            size: *sizes.largest(),
+          });
         }
         IconType::PNG
       }
 
       (mime::IMAGE, mime::JPEG) => {
-        if let Some(size) = sizes.map(|s| s.into_largest()) {
-          return Ok(IconInfo::JPEG { size });
+        if let Some(sizes) = sizes {
+          return Ok(IconInfo::JPEG {
+            size: *sizes.largest(),
+          });
         }
         IconType::JPEG
       }
@@ -122,6 +126,14 @@ impl IconInfo {
     match self {
       IconInfo::ICO { sizes } => Some(sizes.largest()),
       IconInfo::PNG { size } | IconInfo::JPEG { size } => Some(size),
+      IconInfo::SVG => None,
+    }
+  }
+
+  pub fn sizes(&self) -> Option<IconSizes> {
+    match self {
+      IconInfo::ICO { sizes } => Some((*sizes).clone()),
+      IconInfo::PNG { size } | IconInfo::JPEG { size } => Some((*size).into()),
       IconInfo::SVG => None,
     }
   }

@@ -1527,7 +1527,7 @@ checksum = "fa8f3741c7372e75519bd9346068370c9cdaabcc1f9599cbcf2a2719352286b7"
 
 [[package]]
 name = "site_icons"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "byteorder",
  "clap",
@@ -1549,6 +1549,7 @@ dependencies = [
  "tokio 1.1.1",
  "tokio-futures-byteorder",
  "url",
+ "vec1",
 ]
 
 [[package]]
@@ -1989,6 +1990,15 @@ name = "vcpkg"
 version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b00bca6106a5e23f3eee943593759b7fcddb00554332e856d990c893966879fb"
+
+[[package]]
+name = "vec1"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2fffd117bafd8d50c625cce64efde70f416ce6d38f78104035a0913cf15fe97"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "vec_map"
