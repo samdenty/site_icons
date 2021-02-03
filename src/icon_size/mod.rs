@@ -34,14 +34,14 @@ impl IconSize {
     Self { width, height }
   }
 
-  pub fn max_size(&self) -> u32 {
+  pub fn max_rect(&self) -> u32 {
     cmp::max(self.width, self.height)
   }
 }
 
 impl Ord for IconSize {
   fn cmp(&self, other: &Self) -> Ordering {
-    other.max_size().cmp(&self.max_size())
+    other.max_rect().cmp(&self.max_rect())
   }
 }
 
