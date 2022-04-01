@@ -1,10 +1,10 @@
-use clap::Clap;
+use clap::Parser;
 use env_logger::Builder;
 use log::LevelFilter;
 use site_icons::Icons;
 use std::error::Error;
 
-#[derive(Clap)]
+#[derive(Parser)]
 struct Opts {
   urls: Vec<String>,
   #[clap(long)]

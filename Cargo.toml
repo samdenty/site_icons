@@ -18,7 +18,7 @@ wasm-opt = ["-Oz", "--enable-mutable-globals"]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-clap = "3.1.7"
+clap = { version = "3.1.7", features = ["derive"] }
 vec1 = { version = "1.6.0", features = ["serde"] }
 itertools = "0.10.0"
 serde_with = "1.6.2"
