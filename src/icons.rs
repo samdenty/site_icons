@@ -19,7 +19,7 @@ pub struct Icons {
     Url,
     (
       IconKind,
-      Pin<Box<dyn Future<Output = Result<IconInfo, Box<dyn Error + Send + Sync>>>>>,
+      Pin<Box<dyn Future<Output = Result<IconInfo, Box<dyn Error + Send + Sync>>> + Send + Sync>>,
     ),
   >,
 }
