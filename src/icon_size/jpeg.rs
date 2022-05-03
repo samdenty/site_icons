@@ -6,7 +6,7 @@ use tokio_futures_byteorder::AsyncReadBytesExt;
 
 pub async fn get_jpeg_size<R: AsyncRead + Unpin>(
   reader: &mut R,
-) -> Result<IconSize, Box<dyn Error>> {
+) -> Result<IconSize, Box<dyn Error + Send + Sync>> {
   let mut data = [0; 2];
   reader.read_exact(&mut data).await?;
   let data = &mut Cursor::new(data);
