@@ -6,7 +6,7 @@
 //! ```rust
 //! use site_icons::Icons;
 //!
-//! let icons = Icons::new();
+//! let mut icons = Icons::new();
 //! // scrape the icons from a url
 //! icons.load_website("https://github.com").await?;
 //!
@@ -15,7 +15,7 @@
 //!
 //! // entries are sorted from highest to lowest resolution
 //! for icon in entries {
-//!   println("{:?}", icon)
+//!   println!("{:?}", icon)
 //! }
 //! ```
 
