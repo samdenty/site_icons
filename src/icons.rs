@@ -52,7 +52,15 @@ impl Icons {
       .pending_entries
       .get_mut(&url)
       .map(|(kind, _)| kind)
-      .or_else(|| entries.find_map(|icon| (icon.url == url).then_some(&mut icon.kind)))
+      .or_else(|| {
+        entries.find_map(|icon| {
+          if icon.url.eq(&url) {
+            Some(&mut icon.kind)
+          } else {
+            None
+          }
+        })
+      })
     {
       // if the kind is more important, replace it
       if &kind > existing_kind {
