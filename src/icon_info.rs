@@ -30,7 +30,10 @@ pub enum IconInfo {
 }
 
 impl IconInfo {
-  pub async fn load(url: Url, sizes: Option<String>) -> Result<IconInfo, Box<dyn Error + Send + Sync>> {
+  pub async fn load(
+    url: Url,
+    sizes: Option<String>,
+  ) -> Result<IconInfo, Box<dyn Error + Send + Sync>> {
     let sizes = sizes.as_ref().and_then(|s| IconSizes::from_str(s).ok());
 
     let (mime, mut body): (_, Box<dyn AsyncRead + Unpin + Send + Sync>) = match url.scheme() {
