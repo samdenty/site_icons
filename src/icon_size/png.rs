@@ -5,7 +5,7 @@ use std::{error::Error, io::Cursor};
 
 pub async fn get_png_sizes<R: AsyncRead + Unpin>(
   reader: &mut R,
-) -> Result<IconSize, Box<dyn Error + Send + Sync>> {
+) -> Result<IconSize, Box<dyn Error>> {
   let mut header = [0; 24];
   reader.read_exact(&mut header).await?;
   let header = &mut Cursor::new(header);

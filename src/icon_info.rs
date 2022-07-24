@@ -33,10 +33,10 @@ impl IconInfo {
   pub async fn load(
     url: Url,
     sizes: Option<String>,
-  ) -> Result<IconInfo, Box<dyn Error + Send + Sync>> {
+  ) -> Result<IconInfo, Box<dyn Error>> {
     let sizes = sizes.as_ref().and_then(|s| IconSizes::from_str(s).ok());
 
-    let (mime, mut body): (_, Box<dyn AsyncRead + Unpin + Send + Sync>) = match url.scheme() {
+    let (mime, mut body): (_, Box<dyn AsyncRead + Unpin>) = match url.scheme() {
       "data" => {
         let url = url.to_string();
         let url = DataUrl::process(&url).map_err(|_| "failed to parse data uri")?;

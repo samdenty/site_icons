@@ -19,7 +19,7 @@ pub struct Icons {
     Url,
     (
       IconKind,
-      Pin<Box<dyn Future<Output = Result<IconInfo, Box<dyn Error + Send + Sync>>> + Send + Sync>>,
+      Pin<Box<dyn Future<Output = Result<IconInfo, Box<dyn Error>>>>>,
     ),
   >,
 }
@@ -28,7 +28,7 @@ fn add_icon_entry(
   entries: &mut Vec<Icon>,
   url: Url,
   kind: IconKind,
-  info: Result<IconInfo, Box<dyn Error + Send + Sync>>,
+  info: Result<IconInfo, Box<dyn Error>>,
 ) {
   match info {
     Ok(info) => entries.push(Icon { url, kind, info }),

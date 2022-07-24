@@ -88,7 +88,7 @@ fn slice_eq<T: Read + Seek + Unpin>(
   cur: &mut T,
   offset: u64,
   slice: &[u8],
-) -> Result<bool, Box<dyn Error + Send + Sync>> {
+) -> Result<bool, Box<dyn Error>> {
   cur.seek(SeekFrom::Start(offset))?;
   let mut buffer = vec![0; slice.len()];
   cur.read_exact(&mut buffer)?;

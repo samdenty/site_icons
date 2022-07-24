@@ -1,6 +1,6 @@
 [package]
 name = "site_icons"
-version = "0.1.12"
+version = "0.1.13"
 authors = ["Sam Denty <sam@samdenty.com>"]
 edition = "2018"
 license = "GPL-3.0"
@@ -22,13 +22,13 @@ clap = { version = "3.1.7", features = ["derive"] }
 vec1 = { version = "1.6.0", features = ["serde"] }
 itertools = "0.10.0"
 serde_with = "1.6.2"
-html5ever = "0.25.1"
+html5ever = "0.26.0"
 percent-encoding = "2.1.0"
 url = { version = "2.2.0", features = ["serde"] }
 regex = "1"
 log = "0.4.14"
 once_cell = "1.5.2"
-scraper = "0.12.0"
+scraper = "0.13.0"
 tokio-futures-byteorder = { version = "0.2.0", features = ["futures"] }
 byteorder = "1.4.2"
 data-url = "0.1.0"

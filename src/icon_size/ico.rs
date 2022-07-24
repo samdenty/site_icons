@@ -12,7 +12,7 @@ const INDEX_SIZE: u16 = 16;
 
 pub async fn get_ico_sizes<R: AsyncRead + Unpin>(
   reader: &mut R,
-) -> Result<IconSizes, Box<dyn Error + Send + Sync>> {
+) -> Result<IconSizes, Box<dyn Error>> {
   let mut offset = 0;
   let mut header = [0; 6];
   reader.read_exact(&mut header).await?;
