@@ -32,6 +32,7 @@ pub enum IconInfo {
 impl IconInfo {
   pub async fn load(
     url: Url,
+    headers: HeaderMap,
     sizes: Option<String>,
   ) -> Result<IconInfo, Box<dyn Error>> {
     let sizes = sizes.as_ref().and_then(|s| IconSizes::from_str(s).ok());
@@ -54,7 +55,7 @@ impl IconInfo {
       }
 
       _ => {
-        let res = CLIENT.get(url).send().await?;
+        let res = CLIENT.get(url).headers(headers).send().await?;
         if !res.status().is_success() {
           return Err("failed to fetch".into());
         };

@@ -46,6 +46,18 @@ impl Icons {
 
   /// Add an icon URL and start fetching it
   pub fn add_icon(&mut self, url: Url, kind: IconKind, sizes: Option<String>) {
+    self.add_icon_with_headers(url, HeaderMap::new(), kind, sizes)
+  }
+
+  /// Add an icon URL and start fetching it,
+  /// along with the specified headers
+  pub fn add_icon_with_headers(
+    &mut self,
+    url: Url,
+    headers: HeaderMap,
+    kind: IconKind,
+    sizes: Option<String>,
+  ) {
     // check to see if it already exists
     let mut entries = self.entries.iter_mut();
     if let Some(existing_kind) = self
@@ -69,7 +81,7 @@ impl Icons {
       return;
     }
 
-    let mut info = Box::pin(IconInfo::load(url.clone(), sizes));
+    let mut info = Box::pin(IconInfo::load(url.clone(), headers, sizes));
 
     // Start fetching the icon
     let noop_waker = noop_waker();
