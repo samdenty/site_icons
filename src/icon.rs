@@ -2,6 +2,7 @@ use super::IconInfo;
 use serde::Serialize;
 use std::{
   cmp::Ordering,
+  collections::HashMap,
   fmt::{self, Display},
   str::FromStr,
 };
@@ -40,6 +41,7 @@ impl FromStr for IconKind {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Icon {
   pub url: Url,
+  pub headers: HashMap<String, String>,
   #[serde(with = "serde_with::rust::display_fromstr")]
   pub kind: IconKind,
   #[serde(flatten)]

@@ -9,6 +9,7 @@ use html5ever::{
 use reqwest::{header::*, IntoUrl};
 use scraper::{ElementRef, Html};
 use serde::Deserialize;
+use std::convert::TryInto;
 use std::task::Poll;
 use std::{collections::HashMap, error::Error, pin::Pin, task::Context};
 use url::Url;
@@ -19,6 +20,7 @@ pub struct Icons {
     Url,
     (
       IconKind,
+      HashMap<String, String>,
       Pin<Box<dyn Future<Output = Result<IconInfo, Box<dyn Error>>>>>,
     ),
   >,
@@ -27,11 +29,17 @@ pub struct Icons {
 fn add_icon_entry(
   entries: &mut Vec<Icon>,
   url: Url,
+  headers: HashMap<String, String>,
   kind: IconKind,
   info: Result<IconInfo, Box<dyn Error>>,
 ) {
   match info {
-    Ok(info) => entries.push(Icon { url, kind, info }),
+    Ok(info) => entries.push(Icon {
+      url,
+      headers,
+      kind,
+      info,
+    }),
     Err(_) => warn_err!(info, "failed to parse icon"),
   }
 }
@@ -46,7 +54,7 @@ impl Icons {
 
   /// Add an icon URL and start fetching it
   pub fn add_icon(&mut self, url: Url, kind: IconKind, sizes: Option<String>) {
-    self.add_icon_with_headers(url, HeaderMap::new(), kind, sizes)
+    self.add_icon_with_headers(url, HashMap::new(), kind, sizes)
   }
 
   /// Add an icon URL and start fetching it,
@@ -54,7 +62,7 @@ impl Icons {
   pub fn add_icon_with_headers(
     &mut self,
     url: Url,
-    headers: HeaderMap,
+    headers: HashMap<String, String>,
     kind: IconKind,
     sizes: Option<String>,
   ) {
@@ -63,7 +71,7 @@ impl Icons {
     if let Some(existing_kind) = self
       .pending_entries
       .get_mut(&url)
-      .map(|(kind, _)| kind)
+      .map(|(kind, _, _)| kind)
       .or_else(|| {
         entries.find_map(|icon| {
           if icon.url.eq(&url) {
@@ -81,15 +89,19 @@ impl Icons {
       return;
     }
 
-    let mut info = Box::pin(IconInfo::load(url.clone(), headers, sizes));
+    let mut info = Box::pin(IconInfo::load(
+      url.clone(),
+      (&headers).try_into().unwrap(),
+      sizes,
+    ));
 
     // Start fetching the icon
     let noop_waker = noop_waker();
     let cx = &mut Context::from_waker(&noop_waker);
     match info.poll_unpin(cx) {
-      Poll::Ready(info) => add_icon_entry(&mut self.entries, url, kind, info),
+      Poll::Ready(info) => add_icon_entry(&mut self.entries, url, headers, kind, info),
       Poll::Pending => {
-        self.pending_entries.insert(url, (kind, info));
+        self.pending_entries.insert(url, (kind, headers, info));
       }
     };
   }
@@ -278,14 +290,14 @@ impl Icons {
     let (urls, infos): (Vec<_>, Vec<_>) = self
       .pending_entries
       .into_iter()
-      .map(|(url, (kind, info))| ((url, kind), info))
+      .map(|(url, (kind, headers, info))| ((url, headers, kind), info))
       .unzip();
 
     let mut urls = urls.into_iter();
 
     for info in join_all(infos).await {
-      let (url, kind) = urls.next().unwrap();
-      add_icon_entry(&mut self.entries, url, kind, info);
+      let (url, headers, kind) = urls.next().unwrap();
+      add_icon_entry(&mut self.entries, url, headers, kind, info);
     }
 
     self.entries.sort();
