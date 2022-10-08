@@ -10,7 +10,7 @@ pub async fn get_png_size<R: AsyncRead + Unpin>(
   reader.read_exact(&mut header).await?;
   let header = &mut Cursor::new(header);
 
-  assert_slice_eq!(header, 0, b"PNG\r\n\x1a\n", "bad header");
+  assert_slice_eq!(header, 0, b"NG\r\n\x1a\n", "bad header");
   assert_slice_eq!(header, 10, b"IHDR", "bad header");
 
   let width = header.read_u32::<BigEndian>()?;

@@ -37,20 +37,20 @@ impl IconInfo {
     let mut header = [0; 2];
     reader.read_exact(&mut header).await?;
 
-    match (kind, header) {
-      (Some(IconKind::PNG), _) | (_, [0xC2, 0x89]) => {
+    match (kind, &header) {
+      (Some(IconKind::PNG), _) | (_, b"\x89P") => {
         let size = get_png_size(reader).await?;
         Ok(IconInfo::PNG { size })
       }
-      (Some(IconKind::ICO), _) | (_, [0x00, 0x00]) => {
+      (Some(IconKind::ICO), _) | (_, &[0x00, 0x00]) => {
         let sizes = get_ico_sizes(reader).await?;
         Ok(IconInfo::ICO { sizes })
       }
-      (Some(IconKind::JPEG), _) | (_, [0xFF, 0xD8]) => {
+      (Some(IconKind::JPEG), _) | (_, &[0xFF, 0xD8]) => {
         let size = get_jpeg_size(reader).await?;
         Ok(IconInfo::JPEG { size })
       }
-      _ => Err("unknown icon type".into()),
+      _ => Err(format!("unknown icon type ({:?})", header).into()),
     }
   }
 
