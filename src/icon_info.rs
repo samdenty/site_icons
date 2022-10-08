@@ -8,12 +8,12 @@ use std::{
   cmp::Ordering,
   error::Error,
   fmt::{self, Display},
-  io::{self},
+  io,
 };
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-enum IconType {
+enum IconKind {
   PNG,
   JPEG,
   ICO,
@@ -30,6 +30,30 @@ pub enum IconInfo {
 }
 
 impl IconInfo {
+  async fn decode<R: AsyncRead + Unpin>(
+    reader: &mut R,
+    kind: Option<IconKind>,
+  ) -> Result<IconInfo, Box<dyn Error>> {
+    let mut header = [0; 2];
+    reader.read_exact(&mut header).await?;
+
+    match (kind, header) {
+      (Some(IconKind::PNG), _) | (_, [0xC2, 0x89]) => {
+        let size = get_png_size(reader).await?;
+        Ok(IconInfo::PNG { size })
+      }
+      (Some(IconKind::ICO), _) | (_, [0x00, 0x00]) => {
+        let sizes = get_ico_sizes(reader).await?;
+        Ok(IconInfo::ICO { sizes })
+      }
+      (Some(IconKind::JPEG), _) | (_, [0xFF, 0xD8]) => {
+        let size = get_jpeg_size(reader).await?;
+        Ok(IconInfo::JPEG { size })
+      }
+      _ => Err("unknown icon type".into()),
+    }
+  }
+
   pub async fn load(
     url: Url,
     headers: HeaderMap,
@@ -85,7 +109,7 @@ impl IconInfo {
             size: *sizes.largest(),
           });
         }
-        IconType::PNG
+        Some(IconKind::PNG)
       }
 
       (mime::IMAGE, mime::JPEG) => {
@@ -94,7 +118,7 @@ impl IconInfo {
             size: *sizes.largest(),
           });
         }
-        IconType::JPEG
+        Some(IconKind::JPEG)
       }
 
       (mime::IMAGE, "x-icon") | (mime::IMAGE, "vnd.microsoft.icon") => {
@@ -102,28 +126,15 @@ impl IconInfo {
           return Ok(IconInfo::ICO { sizes });
         }
 
-        IconType::ICO
+        Some(IconKind::ICO)
       }
 
-      (mime::IMAGE, mime::SVG) => return Ok(IconInfo::SVG),
+      (mime::IMAGE, mime::SVG) | (mime::TEXT, mime::PLAIN) => return Ok(IconInfo::SVG),
 
-      _ => return Err(format!("unsupported mime type {}", mime).into()),
+      _ => None,
     };
 
-    Ok(match kind {
-      IconType::PNG => {
-        let size = get_png_sizes(&mut body).await?;
-        IconInfo::PNG { size }
-      }
-      IconType::ICO => {
-        let sizes = get_ico_sizes(&mut body).await?;
-        IconInfo::ICO { sizes }
-      }
-      IconType::JPEG => {
-        let size = get_jpeg_size(&mut body).await?;
-        IconInfo::JPEG { size }
-      }
-    })
+    IconInfo::decode(&mut body, kind).await
   }
 
   pub fn size(&self) -> Option<&IconSize> {

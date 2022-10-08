@@ -7,13 +7,6 @@ use tokio_futures_byteorder::AsyncReadBytesExt;
 pub async fn get_jpeg_size<R: AsyncRead + Unpin>(
   reader: &mut R,
 ) -> Result<IconSize, Box<dyn Error>> {
-  let mut data = [0; 2];
-  reader.read_exact(&mut data).await?;
-  let data = &mut Cursor::new(data);
-
-  // first marker of the file MUST be 0xFFD8
-  assert_slice_eq!(data, 0, &[0xFF, 0xD8], "bad header");
-
   let mut marker = [0; 2];
   let mut depth = 0i32;
 

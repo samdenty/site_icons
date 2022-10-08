@@ -1,4 +1,4 @@
-use super::{png::get_png_sizes, IconSize, IconSizes};
+use super::{png::get_png_size, IconSize, IconSizes};
 use byteorder::{LittleEndian, ReadBytesExt};
 use futures::prelude::*;
 use std::{
@@ -13,16 +13,14 @@ const INDEX_SIZE: u16 = 16;
 pub async fn get_ico_sizes<R: AsyncRead + Unpin>(
   reader: &mut R,
 ) -> Result<IconSizes, Box<dyn Error>> {
-  let mut offset = 0;
-  let mut header = [0; 6];
+  let mut offset = 4;
+  let mut header = [0; 4];
   reader.read_exact(&mut header).await?;
-  offset += header.len();
   let mut header = Cursor::new(header);
 
-  let header_type = header.read_u16::<LittleEndian>()?;
   let icon_type = header.read_u16::<LittleEndian>()?;
 
-  if header_type != 0 || icon_type != ICO_TYPE {
+  if icon_type != ICO_TYPE {
     return Err("bad header".into());
   }
 
@@ -48,7 +46,7 @@ pub async fn get_ico_sizes<R: AsyncRead + Unpin>(
       reader.read_exact(&mut data).await?;
       offset += data.len();
 
-      let size = get_png_sizes(reader).await;
+      let size = get_png_size(reader).await;
       if let Ok(size) = size {
         sizes.push(size);
       }
