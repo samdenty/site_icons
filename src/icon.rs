@@ -10,9 +10,9 @@ use url::Url;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Ord, Eq)]
 pub enum IconKind {
+  AppIcon,
   SiteLogo,
   SiteFavicon,
-  AppIcon,
 }
 
 impl Display for IconKind {
