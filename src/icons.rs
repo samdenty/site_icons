@@ -153,6 +153,7 @@ impl Icons {
     {
       let mut logos: Vec<_> = document
         .select(selector!(
+          "a[href='/'] img, a[href='/'] svg",
           "header img, header svg",
           "img[src*=logo]",
           "img[alt*=logo], svg[alt*=logo]",
