@@ -130,9 +130,14 @@ impl Icons {
       )) {
         let elem = elem_ref.value();
         if let Some(href) = elem.attr("href").and_then(|href| url.join(&href).ok()) {
+          let rel = elem.attr("rel").unwrap();
           self.add_icon(
             href,
-            IconKind::SiteFavicon,
+            if rel.contains("apple-touch-icon") {
+              IconKind::AppIcon
+            } else {
+              IconKind::SiteFavicon
+            },
             elem.attr("sizes").map(|sizes| sizes.into()),
           );
 
