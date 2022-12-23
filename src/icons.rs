@@ -15,6 +15,7 @@ use std::{collections::HashMap, error::Error, pin::Pin, task::Context};
 use url::Url;
 
 pub struct Icons {
+  blacklist: Option<Box<dyn Fn(&Url) -> bool>>,
   entries: Vec<Icon>,
   pending_entries: HashMap<
     Url,
@@ -47,6 +48,15 @@ fn add_icon_entry(
 impl Icons {
   pub fn new() -> Self {
     Icons {
+      blacklist: None,
+      entries: Vec::new(),
+      pending_entries: HashMap::new(),
+    }
+  }
+
+  pub fn new_with_blacklist(blacklist: impl Fn(&Url) -> bool + 'static) -> Self {
+    Icons {
+      blacklist: Some(Box::new(blacklist)),
       entries: Vec::new(),
       pending_entries: HashMap::new(),
     }
@@ -115,6 +125,12 @@ impl Icons {
       .error_for_status()?;
 
     let url = res.url().clone();
+
+    if let Some(is_blacklisted) = &self.blacklist {
+      if is_blacklisted(&url) {
+        return Ok(());
+      }
+    }
 
     let mut body = res.bytes_stream();
 
