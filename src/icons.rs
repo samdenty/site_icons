@@ -107,8 +107,15 @@ impl Icons {
   }
 
   pub async fn load_website<U: IntoUrl>(&mut self, url: U) -> Result<(), Box<dyn Error>> {
-    let res = CLIENT.get(url).header(ACCEPT, "text/html").send().await?;
+    let res = CLIENT
+      .get(url)
+      .header(ACCEPT, "text/html")
+      .send()
+      .await?
+      .error_for_status()?;
+
     let url = res.url().clone();
+
     let mut body = res.bytes_stream();
 
     let mut parser = driver::parse_document(Html::new_document(), Default::default());
