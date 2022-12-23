@@ -17,6 +17,7 @@ enum IconKind {
   PNG,
   JPEG,
   ICO,
+  GIF,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -26,6 +27,7 @@ pub enum IconInfo {
   PNG { size: IconSize },
   JPEG { size: IconSize },
   ICO { sizes: IconSizes },
+  GIF { size: IconSize },
   SVG,
 }
 
@@ -49,6 +51,10 @@ impl IconInfo {
       (Some(IconKind::JPEG), _) | (_, &[0xFF, 0xD8]) => {
         let size = get_jpeg_size(reader).await?;
         Ok(IconInfo::JPEG { size })
+      }
+      (Some(IconKind::GIF), _) | (_, &[0x47, 0x49]) => {
+        let size = get_gif_size(reader).await?;
+        Ok(IconInfo::GIF { size })
       }
       _ => Err(format!("unknown icon type ({:?})", header).into()),
     }
@@ -140,7 +146,7 @@ impl IconInfo {
   pub fn size(&self) -> Option<&IconSize> {
     match self {
       IconInfo::ICO { sizes } => Some(sizes.largest()),
-      IconInfo::PNG { size } | IconInfo::JPEG { size } => Some(size),
+      IconInfo::PNG { size } | IconInfo::JPEG { size } | IconInfo::GIF { size } => Some(size),
       IconInfo::SVG => None,
     }
   }
@@ -148,7 +154,9 @@ impl IconInfo {
   pub fn sizes(&self) -> Option<IconSizes> {
     match self {
       IconInfo::ICO { sizes } => Some((*sizes).clone()),
-      IconInfo::PNG { size } | IconInfo::JPEG { size } => Some((*size).into()),
+      IconInfo::PNG { size } | IconInfo::JPEG { size } | IconInfo::GIF { size } => {
+        Some((*size).into())
+      }
       IconInfo::SVG => None,
     }
   }
@@ -159,6 +167,7 @@ impl Display for IconInfo {
     match self {
       IconInfo::PNG { size } => write!(f, "png {}", size),
       IconInfo::JPEG { size } => write!(f, "jpeg {}", size),
+      IconInfo::GIF { size } => write!(f, "gif {}", size),
       IconInfo::ICO { sizes } => write!(f, "ico {}", sizes),
       IconInfo::SVG => write!(f, "svg"),
     }

@@ -1,8 +1,10 @@
+mod gif;
 mod ico;
 mod icon_sizes;
 mod jpeg;
 mod png;
 
+pub use gif::*;
 pub use ico::*;
 pub use icon_sizes::*;
 pub use jpeg::*;
