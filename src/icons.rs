@@ -306,13 +306,14 @@ impl Icons {
   /// Fetch all the icons. Ordered from highest to lowest resolution
   ///
   /// ```
-  /// # async fn run() {
-  /// let icons = Icons::new();
-  /// icons.load_website("https://github.com").await?;
+  /// async fn run() {
+  ///   let mut icons = site_icons::Icons::new();
+  ///   icons.load_website("https://github.com").await.unwrap();
   ///
-  /// let entries = icons.entries().await;
-  /// for icon in entries {
-  ///   println("{:?}", icon)
+  ///   let entries = icons.entries().await;
+  ///   for icon in entries {
+  ///     println!("{:?}", icon)
+  ///   }
   /// }
   /// ```
   pub async fn entries(mut self) -> Vec<Icon> {

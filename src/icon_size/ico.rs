@@ -1,5 +1,5 @@
 use super::{png::get_png_size, IconSize, IconSizes};
-use byteorder::{LittleEndian, ReadBytesExt};
+use byteorder::{LittleEndian, ReadBytesExt as _};
 use futures::prelude::*;
 use std::{
   convert::TryInto,

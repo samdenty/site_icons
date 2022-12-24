@@ -1,5 +1,5 @@
 use super::IconSize;
-use byteorder::{BigEndian, ReadBytesExt};
+use byteorder::{BigEndian, ReadBytesExt as _};
 use futures::prelude::*;
 use std::{error::Error, io::Cursor};
 

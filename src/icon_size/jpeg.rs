@@ -1,8 +1,14 @@
-use super::IconSize;
-use byteorder::BigEndian;
-use futures::prelude::*;
 use std::error::Error;
-use tokio_futures_byteorder::AsyncReadBytesExt;
+
+use futures::{AsyncRead, AsyncReadExt as _};
+
+use super::IconSize;
+
+async fn read_u16_be<R: AsyncRead + Unpin>(reader: &mut R) -> Result<u16, Box<dyn Error>> {
+  let mut buf = [0u8; 2];
+  reader.read_exact(&mut buf).await?;
+  Ok(u16::from_be_bytes(buf))
+}
 
 pub async fn get_jpeg_size<R: AsyncRead + Unpin>(
   reader: &mut R,
@@ -43,14 +49,14 @@ pub async fn get_jpeg_size<R: AsyncRead + Unpin>(
     }
 
     //  Read the marker length and skip over it entirely
-    let page_size = reader.read_u16::<BigEndian>().await? as i64;
+    let page_size = read_u16_be(reader).await? as i64;
     reader
       .read_exact(&mut vec![0; (page_size - 2) as usize])
       .await?;
   }
 
-  let height = reader.read_u16::<BigEndian>().await?;
-  let width = reader.read_u16::<BigEndian>().await?;
+  let height = read_u16_be(reader).await?;
+  let width = read_u16_be(reader).await?;
 
   Ok(IconSize::new(width as _, height as _))
 }

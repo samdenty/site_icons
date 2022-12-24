@@ -1,5 +1,6 @@
 use super::IconInfo;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use serde_with::{DeserializeFromStr, SerializeDisplay};
 use std::{
   cmp::Ordering,
   collections::HashMap,
@@ -8,7 +9,7 @@ use std::{
 };
 use url::Url;
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Ord, Eq)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Ord, Eq, SerializeDisplay, DeserializeFromStr)]
 pub enum IconKind {
   AppIcon,
   SiteLogo,
@@ -42,7 +43,6 @@ impl FromStr for IconKind {
 pub struct Icon {
   pub url: Url,
   pub headers: HashMap<String, String>,
-  #[serde(with = "serde_with::rust::display_fromstr")]
   pub kind: IconKind,
   #[serde(flatten)]
   pub info: IconInfo,
