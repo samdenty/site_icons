@@ -187,25 +187,44 @@ impl Icons {
           "img[alt*=logo], svg[alt*=logo]",
           "img[class*=logo], svg[class*=logo]",
         ))
-        .map(|elem_ref| {
-          let elem = elem_ref.value();
-          let mut weight = 0;
-
-          // if in the header
-          if elem_ref
+        .filter_map(|elem_ref| {
+          let mut ancestors = elem_ref
             .ancestors()
             .map(ElementRef::wrap)
             .flatten()
-            .any(|element| element.value().name() == "header")
-          {
+            .map(|elem_ref| elem_ref.value());
+
+          let skip_classnames = regex!("menu|search");
+          let should_skip = ancestors.any(|ancestor| {
+            ancestor
+              .attr("class")
+              .map(|attr| skip_classnames.is_match(&attr.to_lowercase()))
+              .or_else(|| {
+                ancestor
+                  .attr("id")
+                  .map(|attr| skip_classnames.is_match(&attr.to_lowercase()))
+              })
+              .unwrap_or(false)
+          });
+
+          if should_skip {
+            return None;
+          }
+
+          let mut weight = 0;
+
+          // if in the header
+          if ancestors.any(|element| element.name() == "header") {
             weight += 2;
           }
 
-          let mentions_logo = |attr_name| {
-            elem
-              .attr(attr_name)
-              .map(|attr| regex!("logo([^s]|$)").is_match(&attr.to_lowercase()))
-              .unwrap_or(false)
+          let mut mentions_logo = |attr_name| {
+            ancestors.any(|ancestor| {
+              ancestor
+                .attr(attr_name)
+                .map(|attr| regex!("logo([^s]|$)").is_match(&attr.to_lowercase()))
+                .unwrap_or(false)
+            })
           };
           if mentions_logo("class") || mentions_logo("id") {
             weight += 3;
@@ -217,7 +236,7 @@ impl Icons {
             weight += 1;
           }
 
-          (elem_ref, weight)
+          Some((elem_ref, weight))
         })
         .collect();
 
