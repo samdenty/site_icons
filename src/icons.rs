@@ -10,8 +10,10 @@ use reqwest::{header::*, IntoUrl};
 use scraper::{ElementRef, Html};
 use serde::Deserialize;
 use std::convert::TryInto;
+use std::iter;
 use std::task::Poll;
 use std::{collections::HashMap, error::Error, pin::Pin, task::Context};
+use tldextract::TldOption;
 use url::Url;
 
 pub struct Icons {
@@ -227,14 +229,25 @@ impl Icons {
             weight += 1;
           }
 
-          let mentions_logo = |attr_name| {
-            ancestors.iter().any(|ancestor| {
-              ancestor
-                .attr(attr_name)
-                .map(|attr| regex!("logo([^s]|$)").is_match(&attr.to_lowercase()))
-                .unwrap_or(false)
-            })
+          let mentions = |attr_name, is_match: Box<dyn Fn(&str) -> bool>| {
+            ancestors
+              .iter()
+              .chain(iter::once(&elem_ref.value()))
+              .any(|ancestor| {
+                ancestor
+                  .attr(attr_name)
+                  .map(|attr| is_match(&attr.to_lowercase()))
+                  .unwrap_or(false)
+              })
           };
+
+          let mentions_logo = |attr_name| {
+            mentions(
+              attr_name,
+              Box::new(|attr| regex!("logo([^s]|$)").is_match(attr)),
+            )
+          };
+
           if mentions_logo("class") || mentions_logo("id") {
             weight += 3;
           }
@@ -243,6 +256,20 @@ impl Icons {
           }
           if mentions_logo("src") {
             weight += 1;
+          }
+
+          if let Some(site_name) = url
+            .domain()
+            .and_then(|domain| TldOption::default().build().extract(domain).unwrap().domain)
+          {
+            // if the alt contains the site_name then highest priority
+            if site_name
+              .to_lowercase()
+              .split('-')
+              .any(|segment| mentions("alt", Box::new(move |attr| attr.contains(segment))))
+            {
+              weight += 10;
+            }
           }
 
           Some((elem_ref, weight))
