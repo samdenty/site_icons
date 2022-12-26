@@ -245,6 +245,10 @@ impl Icons {
             })
           };
 
+          if mentions("href", Box::new(|attr| attr == "/")) {
+            weight += 5;
+          };
+
           let mentions_logo = |attr_name| {
             mentions(
               attr_name,
