@@ -118,6 +118,14 @@ impl Icons {
     };
   }
 
+  pub fn is_blacklisted(&self, url: &Url) -> bool {
+    if let Some(is_blacklisted) = &self.blacklist {
+      is_blacklisted(url)
+    } else {
+      false
+    }
+  }
+
   pub async fn load_website<U: IntoUrl>(&mut self, url: U) -> Result<(), Box<dyn Error>> {
     let res = CLIENT
       .get(url)
@@ -128,10 +136,8 @@ impl Icons {
 
     let url = res.url().clone();
 
-    if let Some(is_blacklisted) = &self.blacklist {
-      if is_blacklisted(&url) {
-        return Ok(());
-      }
+    if self.is_blacklisted(&url) {
+      return Ok(());
     }
 
     let mut body = res.bytes_stream();
@@ -194,6 +200,7 @@ impl Icons {
         ))
         .enumerate()
         .filter_map(|(i, elem_ref)| {
+          let elem = elem_ref.value();
           let ancestors = elem_ref
             .ancestors()
             .map(ElementRef::wrap)
@@ -230,15 +237,12 @@ impl Icons {
           }
 
           let mentions = |attr_name, is_match: Box<dyn Fn(&str) -> bool>| {
-            ancestors
-              .iter()
-              .chain(iter::once(&elem_ref.value()))
-              .any(|ancestor| {
-                ancestor
-                  .attr(attr_name)
-                  .map(|attr| is_match(&attr.to_lowercase()))
-                  .unwrap_or(false)
-              })
+            ancestors.iter().chain(iter::once(&elem)).any(|ancestor| {
+              ancestor
+                .attr(attr_name)
+                .map(|attr| is_match(&attr.to_lowercase()))
+                .unwrap_or(false)
+            })
           };
 
           let mentions_logo = |attr_name| {
@@ -272,15 +276,27 @@ impl Icons {
             }
           }
 
-          Some((elem_ref, weight))
+          let href = if elem.name() == "svg" {
+            Some(Url::parse(&encode_svg(&elem_ref.html())).unwrap())
+          } else {
+            elem.attr("src").and_then(|href| url.join(&href).ok())
+          };
+
+          if let Some(href) = &href {
+            if self.is_blacklisted(href) {
+              return None;
+            }
+          }
+
+          href.map(|href| (href, elem_ref, weight))
         })
         .collect();
 
-      logos.sort_by(|(_, a_weight), (_, b_weight)| b_weight.cmp(a_weight));
+      logos.sort_by(|(_, _, a_weight), (_, _, b_weight)| b_weight.cmp(a_weight));
 
       // prefer <img> over svg
       let mut prev_weight = None;
-      for (i, (logo, weight)) in logos.iter().enumerate() {
+      for (href, elem_ref, weight) in &logos {
         if let Some(prev_weight) = prev_weight {
           if weight != prev_weight {
             break;
@@ -288,31 +304,15 @@ impl Icons {
         }
         prev_weight = Some(weight);
 
-        if logo.value().name() == "img" {
-          let (logo, weight) = logos.remove(i);
-          logos.insert(0, (logo, weight + 1));
+        if elem_ref.value().name() == "img" {
+          self.add_icon(href.clone(), IconKind::SiteLogo, None);
           break;
         }
       }
 
-      for (elem_ref, _) in logos {
-        let elem = elem_ref.value();
+      let (href, _, _) = logos.into_iter().next().unwrap();
 
-        if elem.name() == "svg" {
-          let data_uri = Url::parse(&encode_svg(&elem_ref.html())).unwrap();
-          self.add_icon(data_uri, IconKind::SiteLogo, None);
-          break;
-        }
-
-        if let Some(href) = elem_ref
-          .value()
-          .attr("src")
-          .and_then(|href| url.join(&href).ok())
-        {
-          self.add_icon(href, IconKind::SiteLogo, None);
-          break;
-        };
-      }
+      self.add_icon(href, IconKind::SiteLogo, None);
     }
 
     for elem_ref in document.select(selector!("link[rel='manifest']")) {
