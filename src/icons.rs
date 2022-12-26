@@ -187,15 +187,17 @@ impl Icons {
           "img[alt*=logo], svg[alt*=logo]",
           "img[class*=logo], svg[class*=logo]",
         ))
-        .filter_map(|elem_ref| {
-          let mut ancestors = elem_ref
+        .enumerate()
+        .filter_map(|(i, elem_ref)| {
+          let ancestors = elem_ref
             .ancestors()
             .map(ElementRef::wrap)
             .flatten()
-            .map(|elem_ref| elem_ref.value());
+            .map(|elem_ref| elem_ref.value())
+            .collect::<Vec<_>>();
 
           let skip_classnames = regex!("menu|search");
-          let should_skip = ancestors.any(|ancestor| {
+          let should_skip = ancestors.iter().any(|ancestor| {
             ancestor
               .attr("class")
               .map(|attr| skip_classnames.is_match(&attr.to_lowercase()))
@@ -214,12 +216,16 @@ impl Icons {
           let mut weight = 0;
 
           // if in the header
-          if ancestors.any(|element| element.name() == "header") {
+          if ancestors.iter().any(|element| element.name() == "header") {
             weight += 2;
           }
 
-          let mut mentions_logo = |attr_name| {
-            ancestors.any(|ancestor| {
+          if i == 0 {
+            weight += 1;
+          }
+
+          let mentions_logo = |attr_name| {
+            ancestors.iter().any(|ancestor| {
               ancestor
                 .attr(attr_name)
                 .map(|attr| regex!("logo([^s]|$)").is_match(&attr.to_lowercase()))
