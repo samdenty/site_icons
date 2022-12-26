@@ -1,4 +1,5 @@
 use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
+use std::borrow::Cow;
 
 const DATA_URI: &AsciiSet = &CONTROLS
   .add(b'\r')
@@ -28,7 +29,19 @@ pub fn encode_svg(svg: &str) -> String {
   };
 
   // use single quotes instead of double to avoid encoding.
-  let encoded = regex!("\"").replace_all(&encoded, "'");
+  let mut encoded = regex!("\"").replace_all(&encoded, "'");
+
+  // remove a fill=none attribute
+  if let Some(captures) = regex!("^[^>]+fill='?(none)'?").captures(&encoded) {
+    let index = captures.get(1).unwrap();
+    let mut result = String::new();
+    for (i, c) in encoded.chars().enumerate() {
+      if i < index.start() || i >= index.end() {
+        result.push(c);
+      }
+    }
+    encoded = Cow::from(result);
+  }
 
   // remove whitespace
   let encoded = regex!(r">\s{1,}<").replace_all(&encoded, "><");
