@@ -31,7 +31,7 @@ pub fn encode_svg(svg: &str) -> String {
   let encoded = regex!("\"").replace_all(&encoded, "'");
 
   // remove whitespace
-  let encoded = regex!(r">\s{1,}</g").replace_all(&encoded, "><");
+  let encoded = regex!(r">\s{1,}<").replace_all(&encoded, "><");
   let encoded = regex!(r"\s{2,}").replace_all(&encoded, " ");
 
   let encoded = utf8_percent_encode(&encoded, DATA_URI);
