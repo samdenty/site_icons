@@ -310,9 +310,9 @@ impl Icons {
         }
       }
 
-      let (href, _, _) = logos.into_iter().next().unwrap();
-
-      self.add_icon(href, IconKind::SiteLogo, None);
+      if let Some((href, _, _)) = logos.into_iter().next() {
+        self.add_icon(href, IconKind::SiteLogo, None);
+      }
     }
 
     for elem_ref in document.select(selector!("link[rel='manifest']")) {
