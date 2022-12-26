@@ -176,17 +176,35 @@ impl Display for IconInfo {
 
 impl Ord for IconInfo {
   fn cmp(&self, other: &Self) -> Ordering {
-    let this_size = self.size();
-    let other_size = other.size();
+    match (self, other) {
+      (IconInfo::SVG, IconInfo::SVG) => Ordering::Equal,
+      (IconInfo::SVG, _) => Ordering::Less,
+      (_, IconInfo::SVG) => Ordering::Greater,
 
-    if this_size.is_none() && other_size.is_none() {
-      Ordering::Equal
-    } else if let (Some(this_size), Some(other_size)) = (this_size, other_size) {
-      this_size.cmp(other_size)
-    } else if this_size.is_none() {
-      Ordering::Less
-    } else {
-      Ordering::Greater
+      _ => {
+        let this_size = self.size().unwrap();
+        let other_size = other.size().unwrap();
+
+        this_size.cmp(other_size).then_with(|| match (self, other) {
+          (IconInfo::PNG { .. }, IconInfo::PNG { .. }) => Ordering::Equal,
+          (IconInfo::PNG { .. }, _) => Ordering::Less,
+          (_, IconInfo::PNG { .. }) => Ordering::Greater,
+
+          (IconInfo::GIF { .. }, IconInfo::GIF { .. }) => Ordering::Equal,
+          (IconInfo::GIF { .. }, _) => Ordering::Less,
+          (_, IconInfo::GIF { .. }) => Ordering::Greater,
+
+          (IconInfo::JPEG { .. }, IconInfo::JPEG { .. }) => Ordering::Equal,
+          (IconInfo::JPEG { .. }, _) => Ordering::Less,
+          (_, IconInfo::JPEG { .. }) => Ordering::Greater,
+
+          (IconInfo::ICO { .. }, IconInfo::ICO { .. }) => Ordering::Equal,
+          (IconInfo::ICO { .. }, _) => Ordering::Less,
+          (_, IconInfo::ICO { .. }) => Ordering::Greater,
+
+          _ => unreachable!(),
+        })
+      }
     }
   }
 }
