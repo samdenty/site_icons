@@ -185,7 +185,10 @@ impl Icons {
           "header img, header svg",
           "img[src*=logo]",
           "img[alt*=logo], svg[alt*=logo]",
+          "*[class*=logo] img, *[class*=logo] svg",
+          "*[id*=logo] img, *[id*=logo] svg",
           "img[class*=logo], svg[class*=logo]",
+          "img[id*=logo], svg[id*=logo]",
         ))
         .enumerate()
         .filter_map(|(i, elem_ref)| {
