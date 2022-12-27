@@ -1,6 +1,6 @@
 [package]
 name = "site_icons"
-version = "0.4.12"
+version = "0.4.13"
 authors = ["Sam Denty <sam@samdenty.com>"]
 edition = "2018"
 license = "GPL-3.0"
@@ -37,7 +37,7 @@ futures = "0.3.25"
 tldextract = "0.6.0"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-reqwest = { package = "reqwest-wasm", version = "0.11.15", features = [
+reqwest = { package = "reqwest-wasm", version = "0.11.16", features = [
   "json",
   "cookies",
   "blocking",
