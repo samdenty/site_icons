@@ -160,6 +160,16 @@ impl IconInfo {
       IconInfo::SVG => None,
     }
   }
+
+  pub fn mime_type(&self) -> &'static str {
+    match self {
+      IconInfo::PNG { .. } => "image/png",
+      IconInfo::JPEG { .. } => "image/jpeg",
+      IconInfo::ICO { .. } => "image/x-icon",
+      IconInfo::GIF { .. } => "image/gif",
+      IconInfo::SVG => "image/svg+xml",
+    }
+  }
 }
 
 impl Display for IconInfo {
