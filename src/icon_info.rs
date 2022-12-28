@@ -11,9 +11,8 @@ use std::{
   io,
 };
 
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
 enum IconKind {
+  SVG,
   PNG,
   JPEG,
   ICO,
@@ -28,7 +27,7 @@ pub enum IconInfo {
   JPEG { size: IconSize },
   ICO { sizes: IconSizes },
   GIF { size: IconSize },
-  SVG,
+  SVG { size: Option<IconSize> },
 }
 
 impl IconInfo {
@@ -40,6 +39,14 @@ impl IconInfo {
     reader.read_exact(&mut header).await?;
 
     match (kind, &header) {
+      (Some(IconKind::SVG), bytes) => {
+        let size = get_svg_size(bytes, reader).await?;
+        Ok(IconInfo::SVG { size })
+      }
+      (_, &[0x60, byte_two]) => {
+        let size = get_svg_size(&[0x60, byte_two], reader).await?;
+        Ok(IconInfo::SVG { size })
+      }
       (Some(IconKind::PNG), _) | (_, b"\x89P") => {
         let size = get_png_size(reader).await?;
         Ok(IconInfo::PNG { size })
@@ -135,7 +142,25 @@ impl IconInfo {
         Some(IconKind::ICO)
       }
 
-      (mime::IMAGE, mime::SVG) | (mime::TEXT, mime::PLAIN) => return Ok(IconInfo::SVG),
+      (mime::IMAGE, mime::GIF) => {
+        if let Some(sizes) = sizes {
+          return Ok(IconInfo::GIF {
+            size: *sizes.largest(),
+          });
+        }
+
+        Some(IconKind::GIF)
+      }
+
+      (mime::IMAGE, mime::SVG) | (mime::TEXT, mime::PLAIN) => {
+        if let Some(sizes) = sizes {
+          return Ok(IconInfo::SVG {
+            size: Some(*sizes.largest()),
+          });
+        }
+
+        Some(IconKind::SVG)
+      }
 
       _ => None,
     };
@@ -147,7 +172,7 @@ impl IconInfo {
     match self {
       IconInfo::ICO { sizes } => Some(sizes.largest()),
       IconInfo::PNG { size } | IconInfo::JPEG { size } | IconInfo::GIF { size } => Some(size),
-      IconInfo::SVG => None,
+      IconInfo::SVG { size } => size.as_ref(),
     }
   }
 
@@ -157,7 +182,7 @@ impl IconInfo {
       IconInfo::PNG { size } | IconInfo::JPEG { size } | IconInfo::GIF { size } => {
         Some((*size).into())
       }
-      IconInfo::SVG => None,
+      IconInfo::SVG { size } => size.map(|size| size.into()),
     }
   }
 
@@ -167,7 +192,7 @@ impl IconInfo {
       IconInfo::JPEG { .. } => "image/jpeg",
       IconInfo::ICO { .. } => "image/x-icon",
       IconInfo::GIF { .. } => "image/gif",
-      IconInfo::SVG => "image/svg+xml",
+      IconInfo::SVG { .. } => "image/svg+xml",
     }
   }
 }
@@ -179,7 +204,17 @@ impl Display for IconInfo {
       IconInfo::JPEG { size } => write!(f, "jpeg {}", size),
       IconInfo::GIF { size } => write!(f, "gif {}", size),
       IconInfo::ICO { sizes } => write!(f, "ico {}", sizes),
-      IconInfo::SVG => write!(f, "svg"),
+      IconInfo::SVG { size } => {
+        write!(
+          f,
+          "svg{}",
+          if let Some(size) = size {
+            format!(" {}", size)
+          } else {
+            "".to_string()
+          }
+        )
+      }
     }
   }
 }
@@ -187,15 +222,20 @@ impl Display for IconInfo {
 impl Ord for IconInfo {
   fn cmp(&self, other: &Self) -> Ordering {
     match (self, other) {
-      (IconInfo::SVG, IconInfo::SVG) => Ordering::Equal,
-      (IconInfo::SVG, _) => Ordering::Less,
-      (_, IconInfo::SVG) => Ordering::Greater,
+      (IconInfo::SVG { size }, IconInfo::SVG { size: other_size }) => match (size, other_size) {
+        (Some(_), None) => Ordering::Less,
+        (None, Some(_)) => Ordering::Greater,
+        (Some(size), Some(other_size)) => size.cmp(other_size),
+        (None, None) => Ordering::Equal,
+      },
+      (IconInfo::SVG { .. }, _) => Ordering::Less,
+      (_, IconInfo::SVG { .. }) => Ordering::Greater,
 
       _ => {
-        let this_size = self.size().unwrap();
+        let size = self.size().unwrap();
         let other_size = other.size().unwrap();
 
-        this_size.cmp(other_size).then_with(|| match (self, other) {
+        size.cmp(other_size).then_with(|| match (self, other) {
           (IconInfo::PNG { .. }, IconInfo::PNG { .. }) => Ordering::Equal,
           (IconInfo::PNG { .. }, _) => Ordering::Less,
           (_, IconInfo::PNG { .. }) => Ordering::Greater,

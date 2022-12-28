@@ -3,12 +3,14 @@ mod ico;
 mod icon_sizes;
 mod jpeg;
 mod png;
+mod svg;
 
 pub use gif::*;
 pub use ico::*;
 pub use icon_sizes::*;
 pub use jpeg::*;
 pub use png::*;
+pub use svg::*;
 
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::{
