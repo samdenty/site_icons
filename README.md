@@ -40,7 +40,7 @@ https://github.githubassets.com/apple-touch-icon-180x180.png app_icon png 180x18
 
 <blockquote>
 
-```json
+```jsonc
 // site-icons https://reactjs.org --json
 
 [
