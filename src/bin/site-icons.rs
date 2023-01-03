@@ -1,12 +1,15 @@
 use clap::Parser;
 use env_logger::Builder;
 use log::LevelFilter;
-use site_icons::Icons;
+use site_icons::SiteIcons;
 use std::error::Error;
 
 #[derive(Parser)]
 struct Opts {
-  urls: Vec<String>,
+  url: String,
+
+  #[clap(long)]
+  fast: bool,
   #[clap(long)]
   json: bool,
   #[clap(long)]
@@ -16,7 +19,7 @@ struct Opts {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-  let mut icons = Icons::new();
+  let mut icons = SiteIcons::new();
   let opts: Opts = Opts::parse();
 
   if opts.debug {
@@ -25,11 +28,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     builder.init();
   }
 
-  for url in opts.urls {
-    icons.load_website(&url).await?;
-  }
-
-  let entries = icons.entries().await;
+  let entries = icons.load_website(opts.url, opts.fast).await?;
 
   if opts.json {
     println!("{}", serde_json::to_string_pretty(&entries)?)

@@ -1,121 +1,36 @@
-use crate::{utils::encode_svg, Icon, IconInfo, IconKind, CLIENT};
-use future::join_all;
-use futures::StreamExt;
-use futures::{prelude::*, task::noop_waker};
-use html5ever::{
-  driver,
-  tendril::{Tendril, TendrilSink},
-};
+use crate::{html_parser, utils::push_url, Icon, IconKind, CLIENT};
+use flo_stream::{MessagePublisher, Publisher, StreamPublisher};
+use futures::future::{join_all, select_all};
+use futures::prelude::*;
+use futures::{join, StreamExt};
+use itertools::Itertools;
 use reqwest::{header::*, IntoUrl};
-use scraper::{ElementRef, Html};
-use serde::Deserialize;
 use std::convert::TryInto;
-use std::iter;
-use std::task::Poll;
-use std::{collections::HashMap, error::Error, pin::Pin, task::Context};
-use tldextract::TldOption;
+use std::error::Error;
 use url::Url;
+use vec1::Vec1;
 
-pub struct Icons {
+pub struct SiteIcons {
   blacklist: Option<Box<dyn Fn(&Url) -> bool>>,
-  entries: Vec<Icon>,
-  pending_entries: HashMap<
-    Url,
-    (
-      IconKind,
-      HashMap<String, String>,
-      Pin<Box<dyn Future<Output = Result<IconInfo, Box<dyn Error>>>>>,
-    ),
-  >,
 }
 
-fn add_icon_entry(
-  entries: &mut Vec<Icon>,
-  url: Url,
-  headers: HashMap<String, String>,
-  kind: IconKind,
-  info: Result<IconInfo, Box<dyn Error>>,
-) {
-  match info {
-    Ok(info) => entries.push(Icon {
-      url,
-      headers,
-      kind,
-      info,
-    }),
-    Err(_) => warn_err!(info, "failed to parse icon"),
-  }
+#[derive(Debug, Clone)]
+enum LoadedKind {
+  DefaultManifest(Option<Vec1<Icon>>),
+  HeadTags(Option<Vec1<Icon>>),
+  DefaultFavicon(Option<Icon>),
+  SiteLogo(Option<Icon>),
 }
 
-impl Icons {
+impl SiteIcons {
   pub fn new() -> Self {
-    Icons {
-      blacklist: None,
-      entries: Vec::new(),
-      pending_entries: HashMap::new(),
-    }
+    SiteIcons { blacklist: None }
   }
 
   pub fn new_with_blacklist(blacklist: impl Fn(&Url) -> bool + 'static) -> Self {
-    Icons {
+    SiteIcons {
       blacklist: Some(Box::new(blacklist)),
-      entries: Vec::new(),
-      pending_entries: HashMap::new(),
     }
-  }
-
-  /// Add an icon URL and start fetching it
-  pub fn add_icon(&mut self, url: Url, kind: IconKind, sizes: Option<String>) {
-    self.add_icon_with_headers(url, HashMap::new(), kind, sizes)
-  }
-
-  /// Add an icon URL and start fetching it,
-  /// along with the specified headers
-  pub fn add_icon_with_headers(
-    &mut self,
-    url: Url,
-    headers: HashMap<String, String>,
-    kind: IconKind,
-    sizes: Option<String>,
-  ) {
-    // check to see if it already exists
-    let mut entries = self.entries.iter_mut();
-    if let Some(existing_kind) = self
-      .pending_entries
-      .get_mut(&url)
-      .map(|(kind, _, _)| kind)
-      .or_else(|| {
-        entries.find_map(|icon| {
-          if icon.url.eq(&url) {
-            Some(&mut icon.kind)
-          } else {
-            None
-          }
-        })
-      })
-    {
-      // if the kind is more important, replace it
-      if &kind > existing_kind {
-        *existing_kind = kind;
-      }
-      return;
-    }
-
-    let mut info = Box::pin(IconInfo::load(
-      url.clone(),
-      (&headers).try_into().unwrap(),
-      sizes,
-    ));
-
-    // Start fetching the icon
-    let noop_waker = noop_waker();
-    let cx = &mut Context::from_waker(&noop_waker);
-    match info.poll_unpin(cx) {
-      Poll::Ready(info) => add_icon_entry(&mut self.entries, url, headers, kind, info),
-      Poll::Pending => {
-        self.pending_entries.insert(url, (kind, headers, info));
-      }
-    };
   }
 
   pub fn is_blacklisted(&self, url: &Url) -> bool {
@@ -126,271 +41,163 @@ impl Icons {
     }
   }
 
-  pub async fn load_website<U: IntoUrl>(&mut self, url: U) -> Result<(), Box<dyn Error>> {
-    let res = CLIENT
-      .get(url)
-      .header(ACCEPT, "text/html")
-      .send()
-      .await?
-      .error_for_status()?;
+  pub async fn load_website<U: IntoUrl>(
+    &mut self,
+    url: U,
+    best_matches_only: bool,
+  ) -> Result<Vec<Icon>, Box<dyn Error>> {
+    let url = url.into_url()?;
 
-    let url = res.url().clone();
+    let manifest_urls = vec![
+      push_url(&url, "manifest.json"),
+      push_url(&url, "manifest.webmanifest"),
+      url.join("/manifest.json")?,
+      url.join("/manifest.webmanifest")?,
+    ]
+    .into_iter()
+    .unique();
 
-    if self.is_blacklisted(&url) {
-      return Ok(());
-    }
-
-    let mut body = res.bytes_stream();
-
-    let mut parser = driver::parse_document(Html::new_document(), Default::default());
-    while let Some(data) = body.next().await {
-      if let Ok(data) = Tendril::try_from_byte_slice(&data?) {
-        parser.process(data)
-      }
-    }
-    let document = parser.finish();
-
-    {
-      let mut found_favicon = false;
-
-      for elem_ref in document.select(selector!(
-        "link[rel='icon']",
-        "link[rel='shortcut icon']",
-        "link[rel='apple-touch-icon']",
-        "link[rel='apple-touch-icon-precomposed']"
-      )) {
-        let elem = elem_ref.value();
-        if let Some(href) = elem.attr("href").and_then(|href| url.join(&href).ok()) {
-          let rel = elem.attr("rel").unwrap();
-          self.add_icon(
-            href,
-            if rel.contains("apple-touch-icon") {
-              IconKind::AppIcon
-            } else {
-              IconKind::SiteFavicon
-            },
-            elem.attr("sizes").map(|sizes| sizes.into()),
-          );
-
-          found_favicon = true;
-        };
-      }
-
-      // Check for default favicon.ico
-      if !found_favicon {
-        self.add_icon(
-          url.join("/favicon.ico").unwrap(),
-          IconKind::SiteFavicon,
-          None,
-        );
-      }
-    }
-
-    {
-      let mut logos: Vec<_> = document
-        .select(selector!(
-          "a[href='/'] img, a[href='/'] svg",
-          "header img, header svg",
-          "img[src*=logo]",
-          "img[alt*=logo], svg[alt*=logo]",
-          "*[class*=logo] img, *[class*=logo] svg",
-          "*[id*=logo] img, *[id*=logo] svg",
-          "img[class*=logo], svg[class*=logo]",
-          "img[id*=logo], svg[id*=logo]",
-        ))
-        .enumerate()
-        .filter_map(|(i, elem_ref)| {
-          let elem = elem_ref.value();
-          let ancestors = elem_ref
-            .ancestors()
-            .map(ElementRef::wrap)
-            .flatten()
-            .map(|elem_ref| elem_ref.value())
-            .collect::<Vec<_>>();
-
-          let skip_classnames = regex!("menu|search");
-          let should_skip = ancestors.iter().any(|ancestor| {
-            ancestor
-              .attr("class")
-              .map(|attr| skip_classnames.is_match(&attr.to_lowercase()))
-              .or_else(|| {
-                ancestor
-                  .attr("id")
-                  .map(|attr| skip_classnames.is_match(&attr.to_lowercase()))
-              })
-              .unwrap_or(false)
-          });
-
-          if should_skip {
-            return None;
-          }
-
-          let mut weight = 0;
-
-          // if in the header
-          if ancestors.iter().any(|element| element.name() == "header") {
-            weight += 2;
-          }
-
-          if i == 0 {
-            weight += 1;
-          }
-
-          let mentions = |attr_name, is_match: Box<dyn Fn(&str) -> bool>| {
-            ancestors.iter().chain(iter::once(&elem)).any(|ancestor| {
-              ancestor
-                .attr(attr_name)
-                .map(|attr| is_match(&attr.to_lowercase()))
-                .unwrap_or(false)
-            })
-          };
-
-          if mentions("href", Box::new(|attr| attr == "/")) {
-            weight += 5;
-          };
-
-          let mentions_logo = |attr_name| {
-            mentions(
-              attr_name,
-              Box::new(|attr| regex!("logo([^s]|$)").is_match(attr)),
-            )
-          };
-
-          if mentions_logo("class") || mentions_logo("id") {
-            weight += 3;
-          }
-          if mentions_logo("alt") {
-            weight += 2;
-          }
-          if mentions_logo("src") {
-            weight += 1;
-          }
-
-          if let Some(site_name) = url
-            .domain()
-            .and_then(|domain| TldOption::default().build().extract(domain).unwrap().domain)
-          {
-            // if the alt contains the site_name then highest priority
-            if site_name
-              .to_lowercase()
-              .split('-')
-              .any(|segment| mentions("alt", Box::new(move |attr| attr.contains(segment))))
-            {
-              weight += 10;
-            }
-          }
-
-          let href = if elem.name() == "svg" {
-            Some(Url::parse(&encode_svg(&elem_ref.html())).unwrap())
-          } else {
-            elem.attr("src").and_then(|href| url.join(&href).ok())
-          };
-
-          if let Some(href) = &href {
-            if self.is_blacklisted(href) {
-              return None;
-            }
-          }
-
-          href.map(|href| (href, elem_ref, weight))
-        })
-        .collect();
-
-      logos.sort_by(|(_, _, a_weight), (_, _, b_weight)| b_weight.cmp(a_weight));
-
-      // prefer <img> over svg
-      let mut prev_weight = None;
-      for (href, elem_ref, weight) in &logos {
-        if let Some(prev_weight) = prev_weight {
-          if weight != prev_weight {
-            break;
-          }
-        }
-        prev_weight = Some(weight);
-
-        if elem_ref.value().name() == "img" {
-          self.add_icon(href.clone(), IconKind::SiteLogo, None);
-          break;
-        }
-      }
-
-      if let Some((href, _, _)) = logos.into_iter().next() {
-        self.add_icon(href, IconKind::SiteLogo, None);
-      }
-    }
-
-    for elem_ref in document.select(selector!("link[rel='manifest']")) {
-      if let Some(href) = elem_ref
-        .value()
-        .attr("href")
-        .and_then(|href| url.join(&href).ok())
-      {
-        warn_err!(self.load_manifest(href).await, "failed to fetch manifest");
-      }
-    }
-
-    Ok(())
-  }
-
-  pub async fn load_manifest(&mut self, manifest_url: Url) -> Result<(), Box<dyn Error>> {
-    #[derive(Deserialize)]
-    struct ManifestIcon {
-      src: String,
-      sizes: Option<String>,
-    }
-
-    #[derive(Deserialize)]
-    struct Manifest {
-      icons: Option<Vec<ManifestIcon>>,
-    }
-
-    let manifest: Manifest = CLIENT
-      .get(manifest_url.as_str())
-      .send()
-      .await?
-      .json()
-      .await?;
-
-    if let Some(icons) = manifest.icons {
-      for icon in icons {
-        if let Ok(src) = manifest_url.join(&icon.src) {
-          let _ = self.add_icon(src, IconKind::AppIcon, icon.sizes);
-        }
-      }
-    }
-
-    Ok(())
-  }
-
-  /// Fetch all the icons. Ordered from highest to lowest resolution
-  ///
-  /// ```
-  /// async fn run() {
-  ///   let mut icons = site_icons::Icons::new();
-  ///   icons.load_website("https://github.com").await.unwrap();
-  ///
-  ///   let entries = icons.entries().await;
-  ///   for icon in entries {
-  ///     println!("{:?}", icon)
-  ///   }
-  /// }
-  /// ```
-  pub async fn entries(mut self) -> Vec<Icon> {
-    let (urls, infos): (Vec<_>, Vec<_>) = self
-      .pending_entries
+    let favicon_urls = vec![push_url(&url, "favicon.ico"), url.join("/favicon.ico")?]
       .into_iter()
-      .map(|(url, (kind, headers, info))| ((url, headers, kind), info))
-      .unzip();
+      .unique();
 
-    let mut urls = urls.into_iter();
+    let html_response = async {
+      let res = CLIENT
+        .get(url.clone())
+        .header(ACCEPT, "text/html")
+        .send()
+        .await
+        .ok()?
+        .error_for_status()
+        .ok()?;
 
-    for info in join_all(infos).await {
-      let (url, headers, kind) = urls.next().unwrap();
-      add_icon_entry(&mut self.entries, url, headers, kind, info);
+      let url = res.url().clone();
+
+      if self.is_blacklisted(&url) {
+        None
+      } else {
+        let body = res.bytes_stream().map(|res| {
+          res
+            .map(|bytes| bytes.to_vec())
+            .map_err(|err| err.to_string())
+        });
+
+        let mut publisher = Publisher::new(128);
+        let subscriber = publisher.subscribe();
+
+        Some((
+          url,
+          async move { StreamPublisher::new(&mut publisher, body).await }.shared(),
+          subscriber,
+        ))
+      }
+    }
+    .shared();
+
+    let mut futures = vec![
+      async {
+        let html_response = html_response.clone().await;
+
+        LoadedKind::HeadTags(match html_response {
+          Some((url, _, body)) => html_parser::parse_head(&url, body)
+            .await
+            .ok()
+            .and_then(|icons| icons.try_into().ok()),
+          None => None,
+        })
+      }
+      .boxed_local(),
+      async {
+        let html_response = html_response.clone().await;
+
+        LoadedKind::SiteLogo(match html_response {
+          Some((url, complete, body)) => {
+            let (icons, _) = join!(
+              html_parser::parse_site_logo(&url, body, |url| self.is_blacklisted(url)),
+              complete
+            );
+
+            icons.ok()
+          }
+          None => None,
+        })
+      }
+      .boxed_local(),
+      async {
+        let manifests = join_all(manifest_urls.map(|url| SiteIcons::load_manifest(url))).await;
+
+        LoadedKind::DefaultManifest(
+          manifests
+            .into_iter()
+            .find_map(|manifest| manifest.ok().and_then(|icons| icons.try_into().ok())),
+        )
+      }
+      .boxed_local(),
+      async {
+        let favicons =
+          join_all(favicon_urls.map(|url| Icon::load(url.clone(), IconKind::SiteFavicon, None)))
+            .await;
+
+        LoadedKind::DefaultFavicon(favicons.into_iter().find_map(|favicon| favicon.ok()))
+      }
+      .boxed_local(),
+    ];
+
+    let mut icons: Vec<Icon> = Vec::new();
+    let mut found_best_match = false;
+    let mut previous_loads = Vec::new();
+
+    while !futures.is_empty() {
+      let (loaded, index, _) = select_all(&mut futures).await;
+      futures.remove(index);
+
+      match loaded.clone() {
+        LoadedKind::DefaultManifest(manifest_icons) => {
+          if let Some(manifest_icons) = manifest_icons {
+            icons.extend(manifest_icons);
+            found_best_match = true;
+          }
+        }
+        LoadedKind::DefaultFavicon(favicon) => {
+          if let Some(favicon) = favicon {
+            icons.push(favicon);
+
+            if previous_loads
+              .iter()
+              .any(|kind| matches!(kind, LoadedKind::HeadTags(_)))
+            {
+              found_best_match = true;
+            }
+          }
+        }
+        LoadedKind::HeadTags(head_icons) => {
+          if let Some(head_icons) = head_icons {
+            icons.extend(head_icons);
+            found_best_match = true;
+          } else if previous_loads
+            .iter()
+            .any(|kind| matches!(kind, LoadedKind::DefaultFavicon(Some(_))))
+          {
+            found_best_match = true;
+          }
+        }
+        LoadedKind::SiteLogo(logo) => {
+          if let Some(logo) = logo {
+            icons.push(logo);
+          }
+        }
+      }
+
+      previous_loads.push(loaded);
+
+      icons.sort();
+      icons = icons.into_iter().unique().collect();
+
+      if best_matches_only && found_best_match {
+        break;
+      }
     }
 
-    self.entries.sort();
-
-    self.entries
+    Ok(icons)
   }
 }

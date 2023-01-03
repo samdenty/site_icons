@@ -1,6 +1,6 @@
 [package]
 name = "site_icons"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Sam Denty <sam@samdenty.com>"]
 edition = "2018"
 license = "GPL-3.0"
@@ -19,6 +19,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 vec1 = { version = "1.10.1", features = ["serde"] }
+flo_stream = "0.7"
 itertools = "0.10.5"
 serde_with = "2.1.0"
 html5ever = "0.26.0"
@@ -44,11 +45,16 @@ reqwest = { package = "reqwest-wasm", version = "0.11.16", features = [
   "blocking",
   "stream",
 ] }
+cached = { version = "0.41.0", default_features = false, features = [
+  "proc_macro",
+  "wasm",
+] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 clap = { version = "3.2.23", features = ["derive"] }
 tokio = { version = "1.22.0", features = ["full"] }
 env_logger = "0.9.3"
+cached = "0.41.0"
 reqwest = { version = "0.11.13", features = [
   "json",
   "cookies",

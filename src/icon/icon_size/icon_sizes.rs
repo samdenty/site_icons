@@ -22,7 +22,22 @@ impl Display for IconSizes {
 }
 
 impl IconSizes {
-  pub fn from_str(sizes_str: &str) -> Result<IconSizes, Box<dyn Error>> {
+  pub fn add_size(&mut self, size: IconSize) {
+    match self.0.binary_search(&size) {
+      Ok(_) => {}
+      Err(pos) => self.0.insert(pos, size),
+    }
+  }
+
+  pub fn largest(&self) -> &IconSize {
+    self.0.first()
+  }
+}
+
+impl TryFrom<&str> for IconSizes {
+  type Error = Box<dyn Error>;
+
+  fn try_from(sizes_str: &str) -> Result<Self, Self::Error> {
     let size_strs = sizes_str.split(" ");
 
     let mut sizes = Vec::new();
@@ -34,16 +49,21 @@ impl IconSizes {
 
     Ok(sizes.try_into()?)
   }
+}
 
-  pub fn add_size(&mut self, size: IconSize) {
-    match self.0.binary_search(&size) {
-      Ok(_) => {}
-      Err(pos) => self.0.insert(pos, size),
-    }
+impl TryFrom<&String> for IconSizes {
+  type Error = Box<dyn Error>;
+
+  fn try_from(sizes_str: &String) -> Result<Self, Self::Error> {
+    IconSizes::try_from(sizes_str.as_str())
   }
+}
 
-  pub fn largest(&self) -> &IconSize {
-    self.0.first()
+impl TryFrom<String> for IconSizes {
+  type Error = Box<dyn Error>;
+
+  fn try_from(sizes_str: String) -> Result<Self, Self::Error> {
+    IconSizes::try_from(sizes_str.as_str())
   }
 }
 

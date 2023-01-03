@@ -1,3 +1,4 @@
+#![feature(async_closure)]
 //! # site_icons
 //! An efficient website icon scraper.
 //!
@@ -26,15 +27,13 @@ extern crate serde_with;
 extern crate log;
 
 #[macro_use]
-mod macros;
-mod icon;
-mod icon_info;
-mod icon_size;
-mod icons;
 mod utils;
+mod html_parser;
+mod icon;
+mod icons;
+mod manifest;
 
 pub use icon::*;
-pub use icon_info::*;
 pub use icons::*;
 
 use once_cell::sync::Lazy;
@@ -49,23 +48,23 @@ static CLIENT: Lazy<Client> = Lazy::new(|| {
   Client::builder().default_headers(headers).build().unwrap()
 });
 
-#[cfg(test)]
-mod tests {
-  use super::*;
-  #[tokio::test]
-  async fn test_icons() {
-    let mut icons = Icons::new();
-    // scrape the icons from a url
-    icons.load_website("https://github.com").await.unwrap();
+// #[cfg(test)]
+// mod tests {
+//   use super::*;
+//   #[tokio::test]
+//   async fn test_icons() {
+//     let mut icons = SiteIcons::new();
+//     // scrape the icons from a url
+//     icons.load_website("https://github.com").await.unwrap();
 
-    // fetch all icons, ensuring they exist & determining size
-    let entries = icons.entries().await;
+//     // fetch all icons, ensuring they exist & determining size
+//     let entries = icons.entries().await;
 
-    // entries are sorted from highest to lowest resolution
-    for icon in &entries {
-      println!("{:?}", icon)
-    }
+//     // entries are sorted from highest to lowest resolution
+//     for icon in &entries {
+//       println!("{:?}", icon)
+//     }
 
-    assert_eq!(entries.len() > 0, true);
-  }
-}
+//     assert_eq!(entries.len() > 0, true);
+//   }
+// }

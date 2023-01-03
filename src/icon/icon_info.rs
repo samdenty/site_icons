@@ -1,4 +1,5 @@
-use crate::{icon_size::*, CLIENT};
+use super::*;
+use crate::CLIENT;
 use data_url::DataUrl;
 use futures::{io::Cursor, prelude::*, stream::TryStreamExt};
 use mime::MediaType;
@@ -6,6 +7,7 @@ use reqwest::{header::*, Url};
 use serde::{Deserialize, Serialize};
 use std::{
   cmp::Ordering,
+  convert::TryFrom,
   error::Error,
   fmt::{self, Display},
   io,
@@ -72,7 +74,7 @@ impl IconInfo {
     headers: HeaderMap,
     sizes: Option<String>,
   ) -> Result<IconInfo, Box<dyn Error>> {
-    let sizes = sizes.as_ref().and_then(|s| IconSizes::from_str(s).ok());
+    let sizes = sizes.as_ref().and_then(|s| IconSizes::try_from(s).ok());
 
     let (mime, mut body): (_, Box<dyn AsyncRead + Unpin>) = match url.scheme() {
       "data" => {
@@ -92,6 +94,43 @@ impl IconInfo {
       }
 
       _ => {
+        match &url.path().split('.').last().unwrap_or("").to_lowercase()[..] {
+          "svg" => {
+            if let Some(sizes) = sizes {
+              return Ok(IconInfo::SVG {
+                size: Some(*sizes.largest()),
+              });
+            }
+          }
+          "png" => {
+            if let Some(sizes) = sizes {
+              return Ok(IconInfo::PNG {
+                size: *sizes.largest(),
+              });
+            }
+          }
+          "jpeg" | "jpg" => {
+            if let Some(sizes) = sizes {
+              return Ok(IconInfo::JPEG {
+                size: *sizes.largest(),
+              });
+            }
+          }
+          "ico" => {
+            if let Some(sizes) = sizes {
+              return Ok(IconInfo::ICO { sizes });
+            }
+          }
+          "gif" => {
+            if let Some(sizes) = sizes {
+              return Ok(IconInfo::GIF {
+                size: *sizes.largest(),
+              });
+            }
+          }
+          _ => {}
+        };
+
         let res = CLIENT.get(url).headers(headers).send().await?;
         if !res.status().is_success() {
           return Err("failed to fetch".into());
