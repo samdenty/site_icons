@@ -49,8 +49,8 @@ for icon in entries {
 
 ## Running locally
 
-Install [cargo make](https://github.com/sagiegurari/cargo-make) and then:
-
 ```bash
-cargo make run https://github.com
+git clone https://github.com/samdenty/site_icons
+cd site_icons
+cargo run https://github.com
 ```
