@@ -25,7 +25,7 @@ cargo install site_icons
 then run either:
 
 <details open>
-<summary>For human-readable output:</summary>
+<summary>For text output:</summary>
 
 <blockquote>
 
