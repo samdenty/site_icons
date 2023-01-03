@@ -18,15 +18,19 @@ An efficient website icon scraper for rust or command line usage.
 
 First run `cargo install site_icons`, then:
 
-```bash
-site-icons https://github.com
-# https://github.githubassets.com/favicons/favicon.svg site_favicon svg
-# https://github.githubassets.com/app-icon-512.png app_icon png 512x512
-# https://github.githubassets.com/apple-touch-icon-180x180.png app_icon png 180x180
+<details open>
+<summary><code>site-icons https://github.com</code></summary>
+
+```
+https://github.githubassets.com/favicons/favicon.svg site_favicon svg
+https://github.githubassets.com/app-icon-512.png app_icon png 512x512
+https://github.githubassets.com/apple-touch-icon-180x180.png app_icon png 180x180
 ```
 
-<details>
-<summary>View JSON output<pre>site-icons https://reactjs.org --json</pre></summary>
+</details>
+
+<details open>
+<summary><code>site-icons https://reactjs.org --json</code></summary>
 
 ```json
 [
@@ -62,21 +66,6 @@ site-icons https://github.com
 ```
 
 </details>
-
-### Rust usage
-
-```rust
-use site_icons::SiteIcons;
-
-let mut icons = SiteIcons::new();
-// scrape the icons from a url
-let entries = icons.load_website("https://github.com", false).await?;
-
-// entries are sorted from highest to lowest resolution
-for icon in entries {
-  println!("{:?}", icon)
-}
-```
 
 ### Sources
 
