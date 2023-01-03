@@ -16,7 +16,13 @@ An efficient website icon scraper for rust or command line usage.
 
 ### Command line usage
 
-First run `cargo install site_icons`, then:
+First install the binary:
+
+```
+cargo install site_icons
+```
+
+then run either:
 
 <details open>
 <summary>Text output:</summary>
