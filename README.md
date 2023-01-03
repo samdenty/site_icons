@@ -25,7 +25,7 @@ cargo install site_icons
 then run either:
 
 <details open>
-<summary>For text output:</summary>
+<summary><b>For text output:</b></summary>
 
 <blockquote>
 
@@ -48,7 +48,7 @@ https://github.githubassets.com/apple-touch-icon-180x180.png app_icon png 180x18
 </details>
 
 <details open>
-<summary>For JSON output:</summary>
+<summary><b>For JSON output:</b></summary>
 
 <blockquote>
 
