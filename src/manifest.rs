@@ -41,7 +41,7 @@ async fn load_manifest_cached(url: Url) -> Result<Vec<Icon>, String> {
     .map_err(|e| format!("{}: {:?}", url, e))?;
 
   Ok(
-    join_all(manifest.icons.into_iter().map(async move |icon| {
+    join_all(manifest.icons.into_iter().map(|icon| async move {
       if let Ok(src) = url.join(&icon.src) {
         Icon::load(src, IconKind::AppIcon, icon.sizes).await.ok()
       } else {

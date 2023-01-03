@@ -1,4 +1,3 @@
-#![feature(async_closure)]
 #![allow(unused_imports)]
 //! # site_icons
 //! An efficient website icon scraper.
