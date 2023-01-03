@@ -23,11 +23,10 @@ site-icons https://github.com
 # https://github.githubassets.com/favicons/favicon.svg site_favicon svg
 # https://github.githubassets.com/app-icon-512.png app_icon png 512x512
 # https://github.githubassets.com/apple-touch-icon-180x180.png app_icon png 180x180
-# ...
 ```
 
 <details>
-<summary><pre>site-icons https://github.com --json</pre></summary>
+<summary>View JSON output<pre>site-icons https://github.com --json</pre></summary>
 
 ```json
 [
