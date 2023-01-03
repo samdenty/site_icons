@@ -29,14 +29,11 @@ site-icons https://github.com
 ### Rust usage
 
 ```rust
-use site_icons::Icons;
+use site_icons::SiteIcons;
 
-let mut icons = Icons::new();
+let mut icons = SiteIcons::new();
 // scrape the icons from a url
-icons.load_website("https://github.com").await?;
-
-// fetch all icons, ensuring they exist & determining size
-let entries = icons.entries().await;
+let entries = icons.load_website("https://github.com", false).await?;
 
 // entries are sorted from highest to lowest resolution
 for icon in entries {
