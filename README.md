@@ -14,6 +14,21 @@ An efficient website icon scraper for rust or command line usage.
 - Works with inline-data URIs (and automatically converts `<svg>` to them)
 - Supports WASM (and cloudflare workers)
 
+### Rust usage
+
+```rust
+use site_icons::SiteIcons;
+
+let mut icons = SiteIcons::new();
+// scrape the icons from a url
+let entries = icons.load_website("https://github.com", false).await?;
+
+// entries are sorted from highest to lowest resolution
+for icon in entries {
+  println!("{:?}", icon)
+}
+```
+
 ### Command line usage
 
 First install the binary:
