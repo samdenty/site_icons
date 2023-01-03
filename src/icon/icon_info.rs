@@ -94,42 +94,36 @@ impl IconInfo {
       }
 
       _ => {
-        match &url.path().split('.').last().unwrap_or("").to_lowercase()[..] {
-          "svg" => {
-            if let Some(sizes) = sizes {
+        if let Some(sizes) = &sizes {
+          match &url.path().split('.').last().unwrap_or("").to_lowercase()[..] {
+            "svg" => {
               return Ok(IconInfo::SVG {
                 size: Some(*sizes.largest()),
               });
             }
-          }
-          "png" => {
-            if let Some(sizes) = sizes {
+            "png" => {
               return Ok(IconInfo::PNG {
                 size: *sizes.largest(),
               });
             }
-          }
-          "jpeg" | "jpg" => {
-            if let Some(sizes) = sizes {
+            "jpeg" | "jpg" => {
               return Ok(IconInfo::JPEG {
                 size: *sizes.largest(),
               });
             }
-          }
-          "ico" => {
-            if let Some(sizes) = sizes {
-              return Ok(IconInfo::ICO { sizes });
+            "ico" => {
+              return Ok(IconInfo::ICO {
+                sizes: sizes.clone(),
+              });
             }
-          }
-          "gif" => {
-            if let Some(sizes) = sizes {
+            "gif" => {
               return Ok(IconInfo::GIF {
                 size: *sizes.largest(),
               });
             }
-          }
-          _ => {}
-        };
+            _ => {}
+          };
+        }
 
         let res = CLIENT.get(url).headers(headers).send().await?;
         if !res.status().is_success() {
