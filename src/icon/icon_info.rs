@@ -61,7 +61,7 @@ impl IconInfo {
         let size = get_jpeg_size(reader).await?;
         Ok(IconInfo::JPEG { size })
       }
-      (Some(IconKind::GIF), _) | (_, &[0x47, 0x49]) => {
+      (Some(IconKind::GIF), _) | (_, b"GI") => {
         let size = get_gif_size(reader).await?;
         Ok(IconInfo::GIF { size })
       }

@@ -57,9 +57,14 @@ impl SiteIcons {
     .into_iter()
     .unique();
 
-    let favicon_urls = vec![push_url(&url, "favicon.ico"), url.join("/favicon.ico")?]
-      .into_iter()
-      .unique();
+    let favicon_urls = vec![
+      push_url(&url, "favicon.svg"),
+      url.join("/favicon.svg")?,
+      push_url(&url, "favicon.ico"),
+      url.join("/favicon.ico")?,
+    ]
+    .into_iter()
+    .unique();
 
     let html_response = async {
       let res = CLIENT

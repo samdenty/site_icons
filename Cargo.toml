@@ -1,6 +1,6 @@
 [package]
 name = "site_icons"
-version = "0.6.1"
+version = "0.6.2"
 authors = ["Sam Denty <sam@samdenty.com>"]
 edition = "2018"
 license = "GPL-3.0"
