@@ -16,9 +16,9 @@ An efficient website icon scraper for rust or command line usage.
 
 ### Command line usage
 
-```bash
-cargo install site_icons
+First run `cargo install site_icons`, then:
 
+```bash
 site-icons https://github.com
 # https://github.githubassets.com/favicons/favicon.svg site_favicon svg
 # https://github.githubassets.com/app-icon-512.png app_icon png 512x512
@@ -26,7 +26,7 @@ site-icons https://github.com
 ```
 
 <details>
-<summary>View JSON output<pre>site-icons https://github.com --json</pre></summary>
+<summary>View JSON output<pre>site-icons https://reactjs.org --json</pre></summary>
 
 ```json
 [
