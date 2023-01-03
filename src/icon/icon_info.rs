@@ -125,7 +125,13 @@ impl IconInfo {
           };
         }
 
-        let res = CLIENT.get(url).headers(headers).send().await?;
+        let res = CLIENT
+          .get(url)
+          .headers(headers)
+          .send()
+          .await?
+          .error_for_status()?;
+
         if !res.status().is_success() {
           return Err("failed to fetch".into());
         };

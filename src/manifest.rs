@@ -34,6 +34,8 @@ async fn load_manifest_cached(url: Url) -> Result<Vec<Icon>, String> {
     .send()
     .await
     .map_err(|e| format!("{}: {:?}", url, e))?
+    .error_for_status()
+    .map_err(|e| format!("{}: {:?}", url, e))?
     .json()
     .await
     .map_err(|e| format!("{}: {:?}", url, e))?;
