@@ -22,9 +22,47 @@ cargo install site_icons
 site-icons https://github.com
 # https://github.githubassets.com/favicons/favicon.svg site_favicon svg
 # https://github.githubassets.com/app-icon-512.png app_icon png 512x512
-# https://github.githubassets.com/app-icon-192.png app_icon png 192x192
 # https://github.githubassets.com/apple-touch-icon-180x180.png app_icon png 180x180
+# ...
 ```
+
+<details>
+<summary><pre>site-icons https://github.com --json</pre></summary>
+
+```json
+[
+  {
+    "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii0xMS41IC0xMC4yMzE3NCAyMyAyMC40NjM0OCI+CiAgPHRpdGxlPlJlYWN0IExvZ288L3RpdGxlPgogIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIyLjA1IiBmaWxsPSIjNjFkYWZiIi8+CiAgPGcgc3Ryb2tlPSIjNjFkYWZiIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiPgogICAgPGVsbGlwc2Ugcng9IjExIiByeT0iNC4yIi8+CiAgICA8ZWxsaXBzZSByeD0iMTEiIHJ5PSI0LjIiIHRyYW5zZm9ybT0icm90YXRlKDYwKSIvPgogICAgPGVsbGlwc2Ugcng9IjExIiByeT0iNC4yIiB0cmFuc2Zvcm09InJvdGF0ZSgxMjApIi8+CiAgPC9nPgo8L3N2Zz4K",
+    "headers": {},
+    "kind": "site_logo",
+    "type": "svg",
+    "size": null
+  },
+  {
+    "url": "https://reactjs.org/icons/icon-512x512.png?v=f4d46f030265b4c48a05c999b8d93791",
+    "headers": {},
+    "kind": "app_icon",
+    "type": "png",
+    "size": "512x512"
+  },
+  {
+    "url": "https://reactjs.org/favicon.ico",
+    "headers": {},
+    "kind": "site_favicon",
+    "type": "ico",
+    "sizes": ["64x64", "32x32", "24x24", "16x16"]
+  },
+  {
+    "url": "https://reactjs.org/favicon-32x32.png?v=f4d46f030265b4c48a05c999b8d93791",
+    "headers": {},
+    "kind": "site_favicon",
+    "type": "png",
+    "size": "32x32"
+  }
+]
+```
+
+</details>
 
 ### Rust usage
 
