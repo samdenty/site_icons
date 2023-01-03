@@ -43,7 +43,7 @@ for icon in entries {
 
 ### Sources
 
-- HTML favicon tag (or looking for default `/favicon.ico`)
+- HTML favicon tag (or looking for default `/favicon.svg` / `/favicon.ico`)
 - [Web app manifest](https://developer.mozilla.org/en-US/docs/Web/Manifest) [`icons`](https://developer.mozilla.org/en-US/docs/Web/Manifest/icons) field
 - `<img>` tags on the page, directly inside the header OR with a `src|alt|class` containing the text "logo"
 
