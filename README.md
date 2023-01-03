@@ -23,8 +23,8 @@ First run `cargo install site_icons`, then:
 
 <blockquote>
 
-```
-site-icons https://github.com
+```bash
+# site-icons https://github.com
 
 https://github.githubassets.com/favicons/favicon.svg site_favicon svg
 https://github.githubassets.com/app-icon-512.png app_icon png 512x512
@@ -41,7 +41,7 @@ https://github.githubassets.com/apple-touch-icon-180x180.png app_icon png 180x18
 <blockquote>
 
 ```json
-site-icons https://reactjs.org --json
+// site-icons https://reactjs.org --json
 
 [
   {
