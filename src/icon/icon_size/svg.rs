@@ -30,7 +30,7 @@ pub async fn get_svg_size<R: AsyncRead + Unpin>(
           *size.borrow_mut() = Some(if let (Some(width), Some(height)) = (width, height) {
             Some(IconSize::new(width, height))
           } else if let Some(viewbox) = viewbox {
-            regex!(r"^\d+\s+\d+\s+(\d+\.?[\d]?)\s+(\d+\.?[\d]?)")
+            regex!(r"^-?\d+\s+-?\d+\s+(\d+\.?[\d]?)\s+(\d+\.?[\d]?)")
               .captures(&viewbox)
               .map(|captures| {
                 let width = parse_size(captures.get(1).unwrap().as_str()).unwrap();
