@@ -40,7 +40,7 @@ pub async fn parse_head(
             head.on_end_tag(|_| Err(Box::new(EndOfHead {})))?;
             Ok(())
           }),
-          element!("link[rel='manifest']", |manifest| {
+          element!("link[rel~='manifest']", |manifest| {
             if let Some(href) = manifest
               .get_attribute("href")
               .and_then(|href| url.join(&href).ok())
@@ -57,10 +57,9 @@ pub async fn parse_head(
           element!(
             join_with!(
               ",",
-              "link[rel='icon']",
-              "link[rel='shortcut icon']",
-              "link[rel='apple-touch-icon']",
-              "link[rel='apple-touch-icon-precomposed']"
+              "link[rel~='icon']",
+              "link[rel~='apple-touch-icon']",
+              "link[rel~='apple-touch-icon-precomposed']"
             ),
             |link| {
               let rel = link.get_attribute("rel").unwrap();
