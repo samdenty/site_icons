@@ -94,37 +94,6 @@ impl IconInfo {
       }
 
       _ => {
-        if let Some(sizes) = &sizes {
-          match &url.path().split('.').last().unwrap_or("").to_lowercase()[..] {
-            "svg" => {
-              return Ok(IconInfo::SVG {
-                size: Some(*sizes.largest()),
-              });
-            }
-            "png" => {
-              return Ok(IconInfo::PNG {
-                size: *sizes.largest(),
-              });
-            }
-            "jpeg" | "jpg" => {
-              return Ok(IconInfo::JPEG {
-                size: *sizes.largest(),
-              });
-            }
-            "ico" => {
-              return Ok(IconInfo::ICO {
-                sizes: sizes.clone(),
-              });
-            }
-            "gif" => {
-              return Ok(IconInfo::GIF {
-                size: *sizes.largest(),
-              });
-            }
-            _ => {}
-          };
-        }
-
         let res = CLIENT
           .get(url)
           .headers(headers)
