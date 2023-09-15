@@ -2,7 +2,7 @@
 name = "site_icons"
 version = "0.6.4"
 authors = ["Sam Denty <sam@samdenty.com>"]
-edition = "2018"
+edition = "2021"
 license = "GPL-3.0"
 homepage = "https://github.com/samdenty/site_icons"
 repository = "https://github.com/samdenty/site_icons"
