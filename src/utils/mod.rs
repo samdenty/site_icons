@@ -10,7 +10,7 @@ pub use svg_encoder::*;
 use url::Url;
 
 pub fn push_url(url: &Url, segment: &str) -> Url {
-  let mut url = url.clone();
-  url.path_segments_mut().unwrap().push(segment);
-  url
+    let mut url = url.clone();
+    url.path_segments_mut().unwrap().push(segment);
+    url
 }

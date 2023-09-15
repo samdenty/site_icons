@@ -2,58 +2,58 @@ use super::{png::get_png_size, IconSize, IconSizes};
 use byteorder::{LittleEndian, ReadBytesExt as _};
 use futures::prelude::*;
 use std::{
-  convert::TryInto,
-  error::Error,
-  io::{Cursor, Seek, SeekFrom},
+    convert::TryInto,
+    error::Error,
+    io::{Cursor, Seek, SeekFrom},
 };
 
 const ICO_TYPE: u16 = 1;
 const INDEX_SIZE: u16 = 16;
 
 pub async fn get_ico_sizes<R: AsyncRead + Unpin>(
-  reader: &mut R,
+    reader: &mut R,
 ) -> Result<IconSizes, Box<dyn Error>> {
-  let mut offset = 4;
-  let mut header = [0; 4];
-  reader.read_exact(&mut header).await?;
-  let mut header = Cursor::new(header);
+    let mut offset = 4;
+    let mut header = [0; 4];
+    reader.read_exact(&mut header).await?;
+    let mut header = Cursor::new(header);
 
-  let icon_type = header.read_u16::<LittleEndian>()?;
+    let icon_type = header.read_u16::<LittleEndian>()?;
 
-  if icon_type != ICO_TYPE {
-    return Err("bad header".into());
-  }
-
-  let icon_count = header.read_u16::<LittleEndian>()?;
-
-  let mut data = vec![0; (icon_count * INDEX_SIZE) as usize];
-  reader.read_exact(&mut data).await?;
-  offset += data.len();
-  let mut data = Cursor::new(data);
-
-  let mut sizes = Vec::new();
-  for i in 0..icon_count {
-    data.seek(SeekFrom::Start((INDEX_SIZE * i) as _))?;
-
-    let width = data.read_u8()?;
-    let height = data.read_u8()?;
-
-    if width == 0 && height == 0 {
-      data.seek(SeekFrom::Current(10))?;
-      let image_offset = data.read_u32::<LittleEndian>()?;
-
-      let mut data = vec![0; image_offset as usize - offset];
-      reader.read_exact(&mut data).await?;
-      offset += data.len();
-
-      let size = get_png_size(reader).await;
-      if let Ok(size) = size {
-        sizes.push(size);
-      }
-    } else {
-      sizes.push(IconSize::new(width as _, height as _))
+    if icon_type != ICO_TYPE {
+        return Err("bad header".into());
     }
-  }
 
-  Ok(sizes.try_into()?)
+    let icon_count = header.read_u16::<LittleEndian>()?;
+
+    let mut data = vec![0; (icon_count * INDEX_SIZE) as usize];
+    reader.read_exact(&mut data).await?;
+    offset += data.len();
+    let mut data = Cursor::new(data);
+
+    let mut sizes = Vec::new();
+    for i in 0..icon_count {
+        data.seek(SeekFrom::Start((INDEX_SIZE * i) as _))?;
+
+        let width = data.read_u8()?;
+        let height = data.read_u8()?;
+
+        if width == 0 && height == 0 {
+            data.seek(SeekFrom::Current(10))?;
+            let image_offset = data.read_u32::<LittleEndian>()?;
+
+            let mut data = vec![0; image_offset as usize - offset];
+            reader.read_exact(&mut data).await?;
+            offset += data.len();
+
+            let size = get_png_size(reader).await;
+            if let Ok(size) = size {
+                sizes.push(size);
+            }
+        } else {
+            sizes.push(IconSize::new(width as _, height as _))
+        }
+    }
+
+    Ok(sizes.try_into()?)
 }
