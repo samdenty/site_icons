@@ -71,7 +71,7 @@ impl<'de> Deserialize<'de> for IconSize {
     {
         let value: String = Deserialize::deserialize(deserializer)?;
 
-        let mut split = value.split("x");
+        let mut split = value.split('x');
         let width = split
             .next()
             .ok_or(de::Error::custom("expected width"))?

@@ -49,6 +49,6 @@ async fn load_manifest_cached(url: Url) -> Result<Vec<Icon>, String> {
     }))
     .await
     .into_iter()
-    .filter_map(|icon| icon)
+    .flatten()
     .collect())
 }

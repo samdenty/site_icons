@@ -38,7 +38,7 @@ impl TryFrom<&str> for IconSizes {
     type Error = Box<dyn Error>;
 
     fn try_from(sizes_str: &str) -> Result<Self, Self::Error> {
-        let size_strs = sizes_str.split(" ");
+        let size_strs = sizes_str.split(' ');
 
         let mut sizes = Vec::new();
         for size in size_strs {
@@ -85,7 +85,7 @@ impl IntoIterator for IconSizes {
 
 impl Ord for IconSizes {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.largest().cmp(&other.largest())
+        self.largest().cmp(other.largest())
     }
 }
 

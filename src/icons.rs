@@ -129,8 +129,7 @@ impl SiteIcons {
             }
             .boxed_local(),
             async {
-                let manifests =
-                    join_all(manifest_urls.map(|url| SiteIcons::load_manifest(url))).await;
+                let manifests = join_all(manifest_urls.map(SiteIcons::load_manifest)).await;
 
                 LoadedKind::DefaultManifest(
                     manifests

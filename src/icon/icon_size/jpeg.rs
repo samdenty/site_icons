@@ -28,10 +28,10 @@ pub async fn get_jpeg_size<R: AsyncRead + Unpin>(
         let page = marker[1];
 
         //  Check for valid SOFn markers. C4, C8, and CC aren't dimension markers.
-        if (page >= 0xC0 && page <= 0xC3)
-            || (page >= 0xC5 && page <= 0xC7)
-            || (page >= 0xC9 && page <= 0xCB)
-            || (page >= 0xCD && page <= 0xCF)
+        if (0xC0..=0xC3).contains(&page)
+            || (0xC5..=0xC7).contains(&page)
+            || (0xC9..=0xCB).contains(&page)
+            || (0xCD..=0xCF).contains(&page)
         {
             //  Only get outside image size
             if depth == 0 {

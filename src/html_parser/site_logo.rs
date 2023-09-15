@@ -41,8 +41,7 @@ pub async fn parse_site_logo(
                 let elem = elem_ref.value();
                 let ancestors = elem_ref
                     .ancestors()
-                    .map(ElementRef::wrap)
-                    .flatten()
+                    .filter_map(ElementRef::wrap)
                     .map(|elem_ref| elem_ref.value())
                     .collect::<Vec<_>>();
 
@@ -119,7 +118,7 @@ pub async fn parse_site_logo(
                 let href = if elem.name() == "svg" {
                     Some(Url::parse(&encode_svg(&elem_ref.html())).unwrap())
                 } else {
-                    elem.attr("src").and_then(|href| url.join(&href).ok())
+                    elem.attr("src").and_then(|href| url.join(href).ok())
                 };
 
                 if let Some(href) = &href {
