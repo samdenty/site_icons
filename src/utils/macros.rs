@@ -12,10 +12,10 @@ macro_rules! join_with {
 }
 
 macro_rules! regex {
-  ($re:literal $(,)?) => {{
-    static RE: once_cell::sync::OnceCell<regex::Regex> = once_cell::sync::OnceCell::new();
-    RE.get_or_init(|| regex::Regex::new($re).unwrap())
-  }};
+    ($re:literal $(,)?) => {{
+        static RE: once_cell::sync::OnceCell<regex::Regex> = once_cell::sync::OnceCell::new();
+        RE.get_or_init(|| regex::Regex::new($re).unwrap())
+    }};
 }
 
 macro_rules! assert_slice_eq {
